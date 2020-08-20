@@ -1,3 +1,4 @@
+#include "mqtt/client.hpp"
 #include "mqtt/protocol/connection.hpp"
 #include "mqtt/protocol/ping.hpp"
 #include "mqtt/protocol/publishing.hpp"
