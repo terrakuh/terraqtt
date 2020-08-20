@@ -1,5 +1,7 @@
-#include "mqtt/detail/connect.hpp"
-#include "mqtt/detail/publish.hpp"
+#include "mqtt/protocol/connection.hpp"
+#include "mqtt/protocol/ping.hpp"
+#include "mqtt/protocol/publishing.hpp"
+#include "mqtt/protocol/subscription.hpp"
 
 #include <boost/asio.hpp>
 #include <csignal>
@@ -23,32 +25,29 @@ int main()
 
 	stream.connect(asio::ip::tcp::endpoint{ asio::ip::address::from_string("127.0.0.1"), 1883 });
 
-	using namespace mqtt::detail;
-	mqtt::detail::connect_header header{};
+	using namespace mqtt::protocol;
+	connect_header header{};
 
 	header.client_identifier.first  = "mwtst";
 	header.client_identifier.second = 4;
 	header.clean_session            = true;
 	header.keep_alive               = 60;
 
-	mqtt::detail::write_packet(stream, header);
+	write_packet(stream, header);
 
-	mqtt::detail::publish_header h{};
+	publish_header h{};
 
 	h.topic.first    = "/msg";
 	h.topic.second   = 4;
-	h.payload.first  = (const mqtt::detail::byte*) "hi";
+	h.payload.first  = (const byte*) "hi";
 	h.payload.second = 3;
 
-	mqtt::detail::write_packet(stream, h);
-	mqtt::detail::write_elements(stream,
-	                             static_cast<byte>(static_cast<int>(control_packet_type::pingreq) << 4),
-	                             static_cast<variable_integer>(0));
+	write_packet(stream, h);
+	write_packet(stream, pingreq_header{});
 
 	while (true) {
 		if (val == SIGINT) {
-			write_elements(stream, static_cast<byte>(static_cast<int>(control_packet_type::disconnect) << 4),
-			               static_cast<variable_integer>(0));
+			write_packet(stream, disconnect_header{});
 
 			break;
 		}

@@ -1,5 +1,5 @@
-#ifndef MQTT_DETAIL_GENERAL_HPP_
-#define MQTT_DETAIL_GENERAL_HPP_
+#ifndef MQTT_PROTOCOL_GENERAL_HPP_
+#define MQTT_PROTOCOL_GENERAL_HPP_
 
 #include <cstdint>
 #include <iostream>
@@ -10,7 +10,7 @@
 #include <utility>
 
 namespace mqtt {
-namespace detail {
+namespace protocol {
 
 typedef std::uint8_t byte;
 typedef std::ostream byte_ostream;
@@ -160,7 +160,7 @@ inline void write(byte_ostream& output, string_type string)
 	output.write(reinterpret_cast<const byte_ostream::char_type*>(string.first), string.second);
 }
 
-} // namespace detail
+} // namespace protocol
 } // namespace mqtt
 
 #endif

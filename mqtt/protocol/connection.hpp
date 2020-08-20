@@ -1,5 +1,5 @@
-#ifndef MQTT_DETAIL_CONNECT_HPP_
-#define MQTT_DETAIL_CONNECT_HPP_
+#ifndef MQTT_PROTOCOL_CONNECTION_HPP_
+#define MQTT_PROTOCOL_CONNECTION_HPP_
 
 #include "general.hpp"
 
@@ -7,7 +7,7 @@
 #include <utility>
 
 namespace mqtt {
-namespace detail {
+namespace protocol {
 
 struct connect_header
 {
@@ -25,6 +25,9 @@ struct connect_header
 	//	std::optional<string_type> username;
 	//	std::optional<byte_istream&> password;
 };
+
+struct disconnect_header
+{};
 
 inline bool check_client_identifier(const string_type& identifier)
 {
@@ -86,7 +89,13 @@ inline void write_packet(byte_ostream& output, const connect_header& header)
 	// 	}
 }
 
-} // namespace detail
+inline void write_packet(byte_ostream& output, const disconnect_header& header)
+{
+	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::disconnect) << 4),
+	               static_cast<variable_integer>(0));
+}
+
+} // namespace protocol
 } // namespace mqtt
 
 #endif
