@@ -4,8 +4,8 @@
 #include "../optional.hpp"
 #include "general.hpp"
 
-#include <utility>
 #include <limits>
+#include <utility>
 
 namespace mqtt {
 namespace detail {
@@ -56,22 +56,19 @@ inline void write<control_packet_type::connect, const connect_header&>(byte_ostr
 		throw protocol_error{ "password to large" };
 	}
 
-	write_fixed_header<control_packet_type::connect>(
-	    output, 10 + header.client_identifier.length() +
-	                (header.will ? header.will->first.length() + 2 + will_message_size : 0) +
-	                (header.username ? header.username->length() : 0) +
-	                (header.password ? 2 + password_size : 0));
+	// fixed header & protocol name & level & connect flags
+	const auto remaining_size = static_cast<variable_integer>(
+	    10 + header.client_identifier.length() +
+	    (header.will ? header.will->first.length() + 2 + will_message_size : 0) +
+	    (header.username ? header.username->length() : 0) + (header.password ? 2 + password_size : 0));
+	const auto protocol_level = byte{ 0x04 };
+	const auto connect_flags  = static_cast<byte>(
+        (header.username ? 0x80 : 0x00) | (header.password ? 0x40 : 0x00) | (header.will_retain << 5) |
+        (static_cast<int>(header.qos) << 3) | (header.will ? 0x04 : 0x00) | (header.clean_session << 1));
 
-	// protocol name & level & connect flags
-	const auto protocol_level = 0x04;
-	const auto connect_flags  = (header.username ? 0x80 : 0x00) | (header.password ? 0x40 : 0x00) |
-	                           (header.will_retain << 5) | (static_cast<int>(header.qos) << 3) |
-	                           (header.will ? 0x04 : 0x00) | (header.clean_session << 1);
-
-	write_bytes(output, 0x00, 0x04, 'M', 'Q', 'T', 'T', protocol_level, connect_flags);
-
-	// keep alive
-	write_byte_sequence(output, to_byte_sequence(header.keep_alive));
+	write_elements(output, byte{ static_cast<int>(control_packet_type::connect) << 4 }, remaining_size,
+	               std::uint16_t{ 4 }, byte{ 'M' }, byte{ 'Q' }, byte{ 'T' }, byte{ 'T' }, protocol_level,
+	               connect_flags, header.keep_alive);
 
 	// payload
 	write_utf8(output, header.client_identifier);
