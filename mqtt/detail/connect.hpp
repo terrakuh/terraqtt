@@ -1,7 +1,6 @@
 #ifndef MQTT_DETAIL_CONNECT_HPP_
 #define MQTT_DETAIL_CONNECT_HPP_
 
-#include "../optional.hpp"
 #include "general.hpp"
 
 #include <limits>
@@ -12,7 +11,7 @@ namespace detail {
 
 struct connect_header
 {
-	typedef std::pair<std::string, byte_istream&> will_type;
+	// typedef std::pair<string_type, byte_istream&> will_type;
 
 	enum qos qos;
 	bool will_retain;
@@ -21,34 +20,30 @@ struct connect_header
 	std::uint16_t keep_alive;
 	/** must be between 1-23 and may only contain
 	 * "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" */
-	std::string client_identifier;
-	optional<will_type> will;
-	optional<std::string> username;
-	optional<byte_istream&> password;
+	string_type client_identifier;
+	//	std::optional<will_type> will;
+	//	std::optional<string_type> username;
+	//	std::optional<byte_istream&> password;
 };
 
-inline bool check_client_identifier(const std::string& identifier)
+inline bool check_client_identifier(const string_type& identifier)
 {
-	for (auto i : identifier) {
-		if (!std::isalnum(i)) {
+	for (auto i = identifier.first, c = i + identifier.second; i != c; ++i) {
+		if (!std::isalnum(*i)) {
 			return false;
 		}
 	}
 
-	return !identifier.empty();
+	return identifier.second;
 }
 
-template<>
-inline void write<control_packet_type::connect, const connect_header&>(byte_ostream& output,
-                                                                       const connect_header& header)
+inline void write_packet(byte_ostream& output, const connect_header& header)
 {
-	const auto will_message_size =
-	    header.will.map([](const connect_header::will_type& will) { return size_of(will.second); })
-	        .or_else(0);
-	const auto password_size = header.password.map(&size_of).or_else(0);
+	const auto will_message_size = 0; // header.will ? size_of(header.will->second) : 0;
+	const auto password_size     = 0; // header.password ? sizeof(*header.password) : 0;
 
 	// check parameters
-	if (check_client_identifier(header.client_identifier)) {
+	if (!check_client_identifier(header.client_identifier)) {
 		throw protocol_error{ "client identifier is invalid" };
 	} else if (will_message_size > std::numeric_limits<std::uint16_t>::max()) {
 		throw protocol_error{ "will message to large" };
@@ -58,32 +53,37 @@ inline void write<control_packet_type::connect, const connect_header&>(byte_ostr
 
 	// fixed header & protocol name & level & connect flags
 	const auto remaining_size = static_cast<variable_integer>(
-	    10 + header.client_identifier.length() +
-	    (header.will ? header.will->first.length() + 2 + will_message_size : 0) +
-	    (header.username ? header.username->length() : 0) + (header.password ? 2 + password_size : 0));
+	    12 + header.client_identifier.second /*+
+	    (header.will ? header.will->first.second + 2 + will_message_size : 0) +
+	    (header.username ? header.username->second : 0) + (header.password ? 2 + password_size : 0)*/);
 	const auto protocol_level = byte{ 0x04 };
 	const auto connect_flags  = static_cast<byte>(
-        (header.username ? 0x80 : 0x00) | (header.password ? 0x40 : 0x00) | (header.will_retain << 5) |
-        (static_cast<int>(header.qos) << 3) | (header.will ? 0x04 : 0x00) | (header.clean_session << 1));
+        /*(header.username ? 0x80 : 0x00) | (header.password ? 0x40 : 0x00) | */ (header.will_retain << 5) |
+        (static_cast<int>(header.qos) << 3) | /* (header.will ? 0x04 : 0x00) |*/ (header.clean_session << 1));
 
 	write_elements(output, byte{ static_cast<int>(control_packet_type::connect) << 4 }, remaining_size,
 	               std::uint16_t{ 4 }, byte{ 'M' }, byte{ 'Q' }, byte{ 'T' }, byte{ 'T' }, protocol_level,
 	               connect_flags, header.keep_alive);
 
 	// payload
-	write_utf8(output, header.client_identifier);
-	header.will.if_present([&](const connect_header::will_type& will) {
-		write_utf8(output, will.first);
-		write_byte_sequence(output, to_byte_sequence(static_cast<std::uint16_t>(will_message_size)));
+	write(output, header.client_identifier);
 
-		output << will.second.rdbuf();
-	});
-	header.username.if_present([&](const std::string& username) { write_utf8(output, username); });
-	header.password.if_present([&](byte_istream& password) {
-		write_byte_sequence(output, to_byte_sequence(static_cast<std::uint16_t>(password_size)));
+	// 	if (header.will) {
+	// 		write(output, header.will->first);
+	// 		write_elements(output, static_cast<std::uint16_t>(will_message_size));
 
-		output << password.rdbuf();
-	});
+	// 		output << header.will->second.rdbuf();
+	// 	}
+
+	// 	if (header.username) {
+	// 		write(output, *header.username);
+	// 	}
+
+	// 	if (header.password) {
+	// 		write_elements(output, static_cast<std::uint16_t>(password_size));
+
+	// 		output << header.password->rdbuf();
+	// 	}
 }
 
 } // namespace detail

@@ -6,6 +6,8 @@
 #include <ostream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 namespace mqtt {
 namespace detail {
@@ -13,34 +15,14 @@ namespace detail {
 typedef std::uint8_t byte;
 typedef std::ostream byte_ostream;
 typedef std::istream byte_istream;
+typedef std::pair<const char*, std::uint16_t> string_type;
+typedef std::pair<const byte*, std::size_t> blob_type;
+
+enum class variable_integer : std::uint32_t
+{
+};
 
 static_assert(sizeof(byte) == sizeof(byte_ostream::char_type), "sizes mismatch");
-
-template<typename Iterable>
-class span
-{
-public:
-	span(Iterable first, Iterable second) noexcept : _first{ std::move(first) }, _second{ std::move(second) }
-	{}
-	span(Iterable data, std::size_t size) noexcept : _first{ std::move(data) }, _second{ data + size }
-	{}
-	Iterable begin() const noexcept
-	{
-		return _first;
-	}
-	Iterable end() const noexcept
-	{
-		return _second;
-	}
-	std::size_t size() const noexcept
-	{
-		return static_cast<std::size_t>(_second - _first);
-	}
-
-private:
-	Iterable _first;
-	Iterable _second;
-};
 
 enum class control_packet_type
 {
@@ -67,21 +49,11 @@ enum class qos
 	exactly_once
 };
 
-enum class variable_integer : std::uint32_t
-{
-};
-
 class protocol_error : public std::runtime_error
 {
 public:
 	using runtime_error::runtime_error;
 };
-
-template<typename Type>
-inline std::tuple<> to_byte_sequence(Type value)
-{
-	return {};
-}
 
 inline std::size_t size_of(byte_istream& input)
 {
@@ -96,6 +68,18 @@ inline std::size_t size_of(byte_istream& input)
 	return static_cast<std::size_t>(end - pos);
 }
 
+template<typename Element>
+constexpr std::size_t elements_max_size() noexcept
+{
+	return sizeof(typename std::decay<Element>::type);
+}
+
+template<typename Element, typename... Elements>
+constexpr typename std::enable_if<(sizeof...(Elements) > 0), std::size_t>::type elements_max_size() noexcept
+{
+	return elements_max_size<Element>() + elements_max_size<Elements...>();
+}
+
 inline std::size_t write_element(byte* output, byte value) noexcept
 {
 	*output = value;
@@ -105,8 +89,8 @@ inline std::size_t write_element(byte* output, byte value) noexcept
 
 inline std::size_t write_element(byte* output, std::uint16_t value) noexcept
 {
-	*output = static_cast<byte>(value >> 8);
-	*output = static_cast<byte>(value & 0xff);
+	output[0] = static_cast<byte>(value >> 8);
+	output[1] = static_cast<byte>(value & 0xff);
 
 	return 2;
 }
@@ -142,38 +126,39 @@ inline std::size_t write_element(byte* output, variable_integer value)
 	throw protocol_error{ "variable size is too large" };
 }
 
+template<typename Element>
+inline byte* write_elements(byte* output, Element&& element)
+{
+	return output + write_element(output, std::forward<Element>(element));
+}
+
+template<typename Element, typename... Elements>
+inline byte* write_elements(byte* output, Element&& element, Elements&&... elements)
+{
+	return write_elements(output + write_element(output, std::forward<Element>(element)),
+	                      std::forward<Elements>(elements)...);
+}
+
 template<typename... Elements>
 inline void write_elements(byte_ostream& output, Elements&&... elements)
 {
-	byte buffer[size_of_elements<Elements...>()];
+	byte buffer[elements_max_size<Elements...>()];
+
+	output.write(
+	    reinterpret_cast<const byte_ostream::char_type*>(buffer),
+	    static_cast<std::size_t>(write_elements(buffer, std::forward<Elements>(elements)...) - buffer));
 }
 
-inline void write_utf8(byte_ostream& output, span<const char*> string)
+inline void write(byte_ostream& output, blob_type blob)
 {
-	output.write(reinterpret_cast<const byte_ostream::char_type*>(string.begin()), string.size());
+	output.write(reinterpret_cast<const byte_ostream::char_type*>(blob.first), blob.second);
 }
 
-template<typename... Bytes>
-inline void write_bytes(byte_ostream& output, Bytes... bytes)
+inline void write(byte_ostream& output, string_type string)
 {
-	byte buffer[] = { static_cast<byte>(bytes)... };
-
-	output.write(reinterpret_cast<const byte_ostream::char_type*>(buffer), sizeof(buffer));
+	write_elements(output, string.second);
+	output.write(reinterpret_cast<const byte_ostream::char_type*>(string.first), string.second);
 }
-
-template<typename Tuple>
-inline void write_byte_sequence(byte_ostream& output, Tuple&& tuple)
-{}
-
-template<control_packet_type ControlPacketType>
-inline void write_fixed_header(byte_ostream& output, int flags, std::uint32_t remaining_length)
-{
-	// todo: remaining length
-	write_bytes(output, static_cast<int>(ControlPacketType) << 4);
-}
-
-template<control_packet_type ControlPacketType, typename... Args>
-void write(byte_ostream& output, Args... args);
 
 } // namespace detail
 } // namespace mqtt

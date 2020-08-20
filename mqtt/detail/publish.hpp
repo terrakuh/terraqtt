@@ -12,26 +12,21 @@ struct publish_header
 	bool retain;
 	enum qos qos;
 	std::uint16_t packet_identifier;
-	span<const char*> topic;
-	span<const byte*> payload;
+	string_type topic;
+	blob_type payload;
 };
 
-template<>
-inline void write<control_packet_type::publish, const publish_header&>(byte_ostream& output,
-                                                                       const publish_header& header)
+inline void write_packet(byte_ostream& output, const publish_header& header)
 {
-	// write_fixed_header<control_packet_type::publish>(output, 0);
-	write_bytes(output, static_cast<int>(control_packet_type::publish) << 4 |
-	                        (header.duplicate << 3 | static_cast<int>(header.qos) << 1 | header.retain));
+	write_elements(
+	    output,
+	    static_cast<byte>(static_cast<int>(control_packet_type::publish) << 4 |
+	                      (header.duplicate << 3 | static_cast<int>(header.qos) << 1 | header.retain)),
+	    static_cast<variable_integer>(2 + header.topic.second + 0 + header.payload.second));
 
-	write_utf8(output, header.topic);
-
-	if (header.qos != qos::at_most_once) {
-		write_bytes(output, to_byte_sequence(header.packet_identifier));
-	}
-
-	output.write(reinterpret_cast<const byte_ostream::char_type*>(header.payload.begin()),
-	             header.payload.size());
+	write(output, header.topic);
+	//write_elements(output, header.packet_identifier);
+	write(output, header.payload);
 }
 
 } // namespace detail
