@@ -16,8 +16,9 @@ namespace protocol {
 typedef std::uint8_t byte;
 typedef std::ostream byte_ostream;
 typedef std::istream byte_istream;
+typedef std::uint32_t variable_integer_type;
 
-enum class variable_integer : std::uint32_t
+enum class variable_integer : variable_integer_type
 {
 };
 

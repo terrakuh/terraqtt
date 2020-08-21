@@ -5,7 +5,7 @@
 
 namespace mqtt {
 namespace protocol {
-/*
+
 inline control_packet_type peek_type(byte_istream& input)
 {
 	return input.good() ? static_cast<control_packet_type>(input.peek()) : throw io_error{ "failed to read" };
@@ -35,7 +35,7 @@ inline void read_element(byte_istream& input, std::uint16_t& out)
 
 inline void read_element(byte_istream& input, variable_integer& out)
 {
-	typename std::underlying_type<variable_integer>::type value = 0;
+	variable_integer_type value = 0;
 
 	for (auto i = 0; i < 4; ++i) {
 		const auto c = input.get();
@@ -54,40 +54,38 @@ inline void read_element(byte_istream& input, variable_integer& out)
 	out = static_cast<variable_integer>(value);
 }
 
-template<typename Element>
-inline byte* read_element(byte* output, Element&& element)
+template<bool ReadSize, typename Blob>
+inline void read_blob(byte_istream& input, variable_integer remaining_size, Blob& blob)
 {
-	return output + read_element(output, std::forward<Element>(element));
+	auto remaining = static_cast<variable_integer_type>(remaining_size);
+
+	if (ReadSize) {
+		if (remaining < 2) {
+			throw protocol_error{ "invalid remaining size" };
+		}
+
+		std::uint16_t size;
+
+		read_element(input, size);
+
+		if (size > remaining - 2) {
+			throw protocol_error{ "invalid remaining size" };
+		}
+
+		remaining = size;
+	}
+
+	while (remaining) {
+		const auto c = input.get();
+
+		if (!input) {
+			throw io_error{ "could not read remaining blob" };
+		}
+
+		blob.push_back(static_cast<typename Blob::value_type>(input.get()));
+	}
 }
 
-template<typename Element, typename... Elements>
-inline byte* read_elements(byte* output, Element&& element, Elements&&... elements)
-{
-	return read_elements(output + read_element(output, std::forward<Element>(element)),
-	                     std::forward<Elements>(elements)...);
-}
-
-template<typename... Elements>
-inline void read_elements(byte_ostream& output, Elements&&... elements)
-{
-	byte buffer[elements_max_size<Elements...>()];
-
-	output.write(
-	    reinterpret_cast<const byte_ostream::char_type*>(buffer),
-	    static_cast<std::size_t>(read_elements(buffer, std::forward<Elements>(elements)...) - buffer));
-}
-
-inline void read(byte_ostream& output, blob_type blob)
-{
-	output.write(reinterpret_cast<const byte_ostream::char_type*>(blob.first), blob.second);
-}
-
-inline void read(byte_ostream& output, string_type string)
-{
-	read_elements(output, string.second);
-	output.write(reinterpret_cast<const byte_ostream::char_type*>(string.first), string.second);
-}
-*/
 } // namespace protocol
 } // namespace mqtt
 

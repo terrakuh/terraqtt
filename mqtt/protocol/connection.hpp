@@ -6,6 +6,7 @@
 #include "writer.hpp"
 
 #include <limits>
+#include <type_traits>
 #include <utility>
 
 namespace mqtt {
@@ -14,17 +15,17 @@ namespace protocol {
 template<typename String, typename WillMessage, typename Password>
 struct connect_header
 {
+	/** must be between 1-23 and may only contain
+	 * "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" */
+	String client_identifier;
+	std::pair<String, WillMessage>* will;
+	typename std::remove_reference<String>::type* username;
+	typename std::remove_reference<Password>::type* password;
 	qos will_qos;
 	bool will_retain;
 	bool clean_session;
 	/** the keep alive timeout in seconds; 0 means no timeout */
 	std::uint16_t keep_alive;
-	/** must be between 1-23 and may only contain
-	 * "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" */
-	String client_identifier;
-	std::pair<String, WillMessage>* will;
-	String* username;
-	Password* password;
 };
 
 struct disconnect_header
@@ -37,6 +38,8 @@ inline void write_packet(byte_ostream& output, const connect_header<String, Will
 		throw protocol_error{ "invalid will" };
 	} else if (!header.username && header.password) {
 		throw protocol_error{ "invalid username/password combination" };
+	} else if (!header.clean_session && header.client_identifier.empty()) {
+		throw protocol_error{ "empty client identifier" };
 	}
 
 	// fixed header & protocol name & level & connect flags

@@ -21,8 +21,8 @@ struct subscribe_header
 		enum qos qos;
 	};
 
-	std::uint16_t packet_identifier;
 	TopicContainer topics;
+	std::uint16_t packet_identifier;
 };
 
 /**
@@ -42,8 +42,8 @@ struct suback_header
 	static_assert(std::is_same<typename ReturnCodeContainer::value_type, return_code>::value,
 	              "ReturnCodeContainer must return return_code");
 
-	std::uint16_t packet_identifier;
 	ReturnCodeContainer return_codes;
+	std::uint16_t packet_identifier;
 };
 
 /**
@@ -52,8 +52,8 @@ struct suback_header
 template<typename TopicContainer>
 struct unsubscribe_header
 {
-	std::uint16_t packet_identifier;
 	TopicContainer topics;
+	std::uint16_t packet_identifier;
 };
 
 struct unsuback_header
@@ -147,6 +147,27 @@ inline void write_packet(byte_ostream& output, const unsuback_header& header)
 {
 	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::unsuback) << 4),
 	               static_cast<variable_integer>(2), header.packet_identifier);
+}
+
+inline void read_packet(byte_istream& input, unsuback_header& header)
+{
+	byte type;
+
+	read_element(input, type);
+
+	if (type != static_cast<byte>(static_cast<int>(control_packet_type::unsuback) << 4)) {
+		throw protocol_error{ "invalid unsuback flags" };
+	}
+
+	variable_integer remaining;
+
+	read_element(input, remaining);
+
+	if (remaining != static_cast<variable_integer>(2)) {
+		throw protocol_error{ "invalid payload for unsuback" };
+	}
+
+	read_element(input, header.packet_identifier);
 }
 
 } // namespace protocol
