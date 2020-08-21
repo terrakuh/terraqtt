@@ -4,7 +4,7 @@
 #include "protocol/connection.hpp"
 
 namespace mqtt {
-
+/*
 class client
 {
 public:
@@ -37,7 +37,7 @@ protected:
 private:
 	protocol::byte_ostream* _output;
 };
-
+*/
 } // namespace mqtt
 
 #endif

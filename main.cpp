@@ -7,6 +7,7 @@
 #include <boost/asio.hpp>
 #include <csignal>
 #include <iostream>
+#include <string>
 
 using namespace boost;
 
@@ -22,26 +23,25 @@ int main()
 	std::signal(SIGINT, &handler);
 
 	asio::io_service service;
-	asio::ip::tcp::iostream stream{ asio::ip::tcp::socket{ service } };
+	asio::ip::tcp::iostream stream;
 
 	stream.connect(asio::ip::tcp::endpoint{ asio::ip::address::from_string("127.0.0.1"), 1883 });
 
 	using namespace mqtt::protocol;
-	connect_header header{};
+	connect_header<std::string, std::string, std::string> header{};
 
-	header.client_identifier.first  = "mwtst";
-	header.client_identifier.second = 4;
-	header.clean_session            = true;
-	header.keep_alive               = 60;
+	header.client_identifier = "mqtt-client";
+	header.clean_session     = true;
+	header.keep_alive        = 60;
+	std::string user         = "me";
+	header.username          = &user;
 
 	write_packet(stream, header);
 
-	publish_header h{};
+	publish_header<std::string, std::string> h{};
 
-	h.topic.first    = "/msg";
-	h.topic.second   = 4;
-	h.payload.first  = (const byte*) "hi";
-	h.payload.second = 3;
+	h.topic   = "/msg";
+	h.payload = "hi";
 
 	write_packet(stream, h);
 	write_packet(stream, pingreq_header{});

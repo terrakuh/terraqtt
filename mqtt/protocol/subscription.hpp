@@ -2,48 +2,34 @@
 #define MQTT_PROTOCOL_SUBSCRIPTION_HPP_
 
 #include "general.hpp"
-
-#include <iterator>
+#include "reader.hpp"
+#include "writer.hpp"
 
 namespace mqtt {
 namespace protocol {
 
 /**
- * @tparam ReturnCodeIterator must meet the requirements of LegacyInputIterator and must return
- * subscribe_header_in::topic
+ * @tparam String see write_blob()
+ * @tparam TopicContainer must hold the type subscribe_header::topic
  */
-template<typename TopicIterator>
-struct subscribe_header_in
+template<typename String, typename TopicContainer>
+struct subscribe_header
 {
 	struct topic
 	{
-		string_type filter;
+		String filter;
 		enum qos qos;
 	};
 
 	std::uint16_t packet_identifier;
-	std::pair<TopicIterator, TopicIterator> topics;
-};
-
-template<typename TopicIterator>
-struct subscribe_header_out
-{
-	struct topic
-	{
-		string_type filter;
-		enum qos qos;
-	};
-
-	std::uint16_t packet_identifier;
-	TopicIterator topics;
+	TopicContainer topics;
 };
 
 /**
- * @tparam ReturnCodeIterator must meet the requirements of LegacyInputIterator and must return
- * suback_header_out::return_code
+ * @tparam ReturnCodeContainer must hold the type suback_header::return_code
  */
-template<typename ReturnCodeIterator>
-struct suback_header_out
+template<typename ReturnCodeContainer>
+struct suback_header
 {
 	enum class return_code
 	{
@@ -53,19 +39,21 @@ struct suback_header_out
 		failure  = 0x80
 	};
 
+	static_assert(std::is_same<typename ReturnCodeContainer::value_type, return_code>::value,
+	              "ReturnCodeContainer must return return_code");
+
 	std::uint16_t packet_identifier;
-	std::pair<ReturnCodeIterator, ReturnCodeIterator> return_codes;
+	ReturnCodeContainer return_codes;
 };
 
 /**
- * @tparam ReturnCodeIterator must meet the requirements of LegacyInputIterator and must return
- * string_type
+ * @tparam TopicContainer must hold Strings
  */
-template<typename TopicIterator>
-struct unsubscribe_header_in
+template<typename TopicContainer>
+struct unsubscribe_header
 {
 	std::uint16_t packet_identifier;
-	std::pair<TopicIterator, TopicIterator> topics;
+	TopicContainer topics;
 };
 
 struct unsuback_header
@@ -73,53 +61,88 @@ struct unsuback_header
 	std::uint16_t packet_identifier;
 };
 
-template<typename TopicIterator>
-inline void write_packet(byte_ostream& output, const subscribe_header_in<TopicIterator>& header)
+/**
+ * Writes a subscribe packet to the output stream.
+ *
+ * @exception see write_blob(), write_elements()
+ * @param output[in] the output stream
+ * @param header the subscribe header
+ * @tparam String see subscribe_header
+ * @tparam TopicContainer must meet the requirements of *Container*
+ */
+template<typename String, typename TopicContainer>
+inline void write_packet(byte_ostream& output, const subscribe_header<String, TopicContainer>& header)
 {
 	typename std::underlying_type<variable_integer>::type remaining = 2;
 
-	for (auto i = header.topics.first; i != header.topics.second; ++i) {
-		remaining += 2 + i->filter.second + 1;
+	for (const auto& i : header.topics) {
+		if (!protected_add(remaining, 3u) || !protected_add(remaining, i.filter.size())) {
+			throw protocol_error{ "remaining size cannot be represented" };
+		}
 	}
 
 	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::subscribe) << 4 | 0x02),
 	               static_cast<variable_integer>(remaining), header.packet_identifier);
 
-	for (auto i = header.topics.first; i != header.topics.second; ++i) {
-		write(output, i->filter);
-		write_elements(output, static_cast<byte>(i->qos));
+	for (const auto& i : header.topics) {
+		write_blob<true>(output, i.filter);
+		write_elements(output, static_cast<byte>(i.qos));
 	}
 }
 
-template<typename ReturnCodeIterator>
-inline void write_packet(byte_ostream& output, const suback_header_out<ReturnCodeIterator>& header)
+/**
+ * Writes a suback packet to the output stream.
+ *
+ * @exception see write_elements()
+ * @param output[in] the output stream
+ * @param header the suback header
+ * @tparam ReturnCodeContainer must meet the requirements of *Container*
+ */
+template<typename ReturnCodeContainer>
+inline void write_packet(byte_ostream& output, const suback_header<ReturnCodeContainer>& header)
 {
 	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::suback) << 4),
-	               static_cast<variable_integer>(
-	                   2 + std::distance(header.return_codes.first, header.return_codes.second)));
+	               static_cast<variable_integer>(2 + header.return_codes.size()));
 
-	for (auto i = header.topics.first; i != header.topics.second; ++i) {
-		write_elements(output, static_cast<byte>(*i));
+	for (auto i : header.return_codes) {
+		write_elements(output, static_cast<byte>(i));
 	}
 }
 
-template<typename TopicIterator>
-inline void write_packet(byte_ostream& output, const unsubscribe_header_in<TopicIterator>& header)
+/**
+ * Writes a unsubscribe packet to the output stream.
+ *
+ * @exception see write_blob(), write_elements()
+ * @param output[in] the output stream
+ * @param header the unsubscribe header
+ * @tparam TopicContainer must meet the requirements of *Container*
+ */
+template<typename TopicContainer>
+inline void write_packet(byte_ostream& output, const unsubscribe_header<TopicContainer>& header)
 {
 	typename std::underlying_type<variable_integer>::type remaining = 2;
 
-	for (auto i = header.topics.first; i != header.topics.second; ++i) {
-		remaining += 2 + i->second;
+	for (const auto& i : header.topics) {
+		if (!protected_add(remaining, 2u) || !protected_add(remaining, i.size())) {
+			throw protocol_error{ "remaining size cannot be represented" };
+		}
 	}
 
 	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::unsubscribe) << 4 | 0x02),
 	               static_cast<variable_integer>(remaining), header.packet_identifier);
 
-	for (auto i = header.topics.first; i != header.topics.second; ++i) {
-		write(output, *i);
+	for (const auto& i : header.topics) {
+		write_blob<true>(output, i);
 	}
 }
 
+/**
+ * Writes a unsuback packet to the output stream.
+ *
+ * @exception see write_elements()
+ * @param output[in] the output stream
+ * @param header the unsuback header
+ */
 inline void write_packet(byte_ostream& output, const unsuback_header& header)
 {
 	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::unsuback) << 4),

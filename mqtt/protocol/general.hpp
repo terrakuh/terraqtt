@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <limits>
 #include <ostream>
 #include <stdexcept>
 #include <string>
@@ -15,8 +16,6 @@ namespace protocol {
 typedef std::uint8_t byte;
 typedef std::ostream byte_ostream;
 typedef std::istream byte_istream;
-typedef std::pair<const char*, std::uint16_t> string_type;
-typedef std::pair<const byte*, std::size_t> blob_type;
 
 enum class variable_integer : std::uint32_t
 {
@@ -55,6 +54,12 @@ public:
 	using runtime_error::runtime_error;
 };
 
+class io_error : public std::runtime_error
+{
+public:
+	using runtime_error::runtime_error;
+};
+
 inline std::size_t size_of(byte_istream& input)
 {
 	const auto pos = input.tellg();
@@ -80,84 +85,18 @@ constexpr typename std::enable_if<(sizeof...(Elements) > 0), std::size_t>::type 
 	return elements_max_size<Element>() + elements_max_size<Elements...>();
 }
 
-inline std::size_t write_element(byte* output, byte value) noexcept
+template<typename Left, typename Right>
+inline bool protected_add(Left& left, Right right) noexcept
 {
-	*output = value;
+	static_assert(std::is_unsigned<Left>::value && std::is_unsigned<Right>::value, "must be unsigned");
 
-	return 1;
-}
-
-inline std::size_t write_element(byte* output, std::uint16_t value) noexcept
-{
-	output[0] = static_cast<byte>(value >> 8);
-	output[1] = static_cast<byte>(value & 0xff);
-
-	return 2;
-}
-
-inline std::size_t write_element(byte* output, variable_integer value)
-{
-	const auto v = static_cast<typename std::underlying_type<variable_integer>::type>(value);
-
-	if (v < 128) {
-		*output = static_cast<byte>(v);
-
-		return 1;
-	} else if (v < 16384) {
-		output[0] = static_cast<byte>(v >> 7 | 0x80);
-		output[1] = static_cast<byte>(v & 0x7f);
-
-		return 2;
-	} else if (v < 2097152) {
-		output[0] = static_cast<byte>(v >> 14 & 0x7f | 0x80);
-		output[1] = static_cast<byte>(v >> 7 & 0x7f | 0x80);
-		output[2] = static_cast<byte>(v & 0x7f);
-
-		return 3;
-	} else if (v < 268435456) {
-		output[0] = static_cast<byte>(v >> 21 & 0x7f | 0x80);
-		output[1] = static_cast<byte>(v >> 14 & 0x7f | 0x80);
-		output[2] = static_cast<byte>(v >> 7 & 0x7f | 0x80);
-		output[3] = static_cast<byte>(v & 0x7f);
-
-		return 4;
+	if (left > std::numeric_limits<Left>::max() - right) {
+		return false;
 	}
 
-	throw protocol_error{ "variable size is too large" };
-}
+	left += right;
 
-template<typename Element>
-inline byte* write_elements(byte* output, Element&& element)
-{
-	return output + write_element(output, std::forward<Element>(element));
-}
-
-template<typename Element, typename... Elements>
-inline byte* write_elements(byte* output, Element&& element, Elements&&... elements)
-{
-	return write_elements(output + write_element(output, std::forward<Element>(element)),
-	                      std::forward<Elements>(elements)...);
-}
-
-template<typename... Elements>
-inline void write_elements(byte_ostream& output, Elements&&... elements)
-{
-	byte buffer[elements_max_size<Elements...>()];
-
-	output.write(
-	    reinterpret_cast<const byte_ostream::char_type*>(buffer),
-	    static_cast<std::size_t>(write_elements(buffer, std::forward<Elements>(elements)...) - buffer));
-}
-
-inline void write(byte_ostream& output, blob_type blob)
-{
-	output.write(reinterpret_cast<const byte_ostream::char_type*>(blob.first), blob.second);
-}
-
-inline void write(byte_ostream& output, string_type string)
-{
-	write_elements(output, string.second);
-	output.write(reinterpret_cast<const byte_ostream::char_type*>(string.first), string.second);
+	return true;
 }
 
 } // namespace protocol
