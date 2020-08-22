@@ -1,6 +1,7 @@
 #ifndef MQTT_CLIENT_HPP_
 #define MQTT_CLIENT_HPP_
 
+#include "detail/constrained_streambuf.hpp"
 #include "protocol/connection.hpp"
 #include "protocol/ping.hpp"
 #include "protocol/publishing.hpp"
@@ -25,6 +26,7 @@ class basic_client_base
 {
 public:
 	typedef String string_type;
+	typedef ReturnCodeContainer return_code_container_type;
 
 	basic_client_base(protocol::byte_ostream& output, protocol::byte_istream& input)
 	    : _output{ &output }, _input{ &input }
@@ -130,7 +132,11 @@ public:
 			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>(),
 			                          payload_size)) {
 				_clear_read();
-				on_publish(_read_header.template get<index>(), payload_size);
+
+				detail::constrained_streambuf buf{ *_input->rdbuf(), payload_size };
+				std::istream payload{ &buf };
+
+				on_publish(_read_header.template get<index>(), payload);
 			}
 
 			break;
@@ -240,21 +246,8 @@ public:
 	}
 
 protected:
-	virtual void on_publish(protocol::publish_header<String>& header,
-	                        protocol::variable_integer_type payload_size)
-	{
-		printf("%s", "data received: ");
-		std::string s;
-		s.resize(payload_size);
-		_input->read(&s[0], s.size());
-		puts(s.c_str());
-
-		if (header.qos == qos::at_least_once) {
-			std::lock_guard<BasicLockable> _{ _output_mutex };
-
-			protocol::write_packet(*_output, protocol::puback_header{ header.packet_identifier });
-		}
-	}
+	virtual void on_publish(protocol::publish_header<string_type>& header, std::istream& payload)
+	{}
 	virtual void on_puback(protocol::puback_header& header)
 	{}
 	virtual void on_pubrec(protocol::pubrec_header& header)
@@ -263,7 +256,7 @@ protected:
 	{}
 	virtual void on_pubcomp(protocol::pubcomp_header& header)
 	{}
-	virtual void on_suback(protocol::suback_header<ReturnCodeContainer>& header)
+	virtual void on_suback(protocol::suback_header<return_code_container_type>& header)
 	{}
 	virtual void on_unsuback(protocol::unsuback_header& header)
 	{}
