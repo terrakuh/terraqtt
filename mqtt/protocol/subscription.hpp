@@ -102,11 +102,52 @@ template<typename ReturnCodeContainer>
 inline void write_packet(byte_ostream& output, const suback_header<ReturnCodeContainer>& header)
 {
 	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::suback) << 4),
-	               static_cast<variable_integer>(2 + header.return_codes.size()));
+	               static_cast<variable_integer>(2 + header.return_codes.size()), header.packet_identifier);
 
 	for (auto i : header.return_codes) {
 		write_elements(output, static_cast<byte>(i));
 	}
+}
+
+template<typename ReturnCodeContainer>
+inline bool read_packet(byte_istream& input, read_context& context,
+                        suback_header<ReturnCodeContainer>& header)
+{
+	if (context.sequence == 0) {
+		byte type;
+
+		if (!read_element(input, context, type)) {
+			return false;
+		} else if (type != static_cast<byte>(static_cast<int>(control_packet_type::suback) << 4)) {
+			throw protocol_error{ "invalid suback flags" };
+		}
+	}
+
+	if (context.sequence == 1) {
+		variable_integer remaining;
+
+		if (!read_element(input, context, remaining)) {
+			return false;
+		}
+
+		context.remaining_size = static_cast<variable_integer_type>(remaining);
+	}
+
+	if (context.sequence == 2 && !read_element(input, context, header.packet_identifier)) {
+		return false;
+	}
+
+	while (context.remaining_size) {
+		byte rc;
+
+		if (!read_element(input, context, rc)) {
+			return false;
+		}
+
+		header.return_codes.push_back(static_cast<enum suback_header<ReturnCodeContainer>::return_code>(rc));
+	}
+
+	return true;
 }
 
 /**

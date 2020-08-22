@@ -8,11 +8,10 @@
 namespace mqtt {
 namespace protocol {
 
-template<typename String, typename Blob>
+template<typename String>
 struct publish_header
 {
 	String topic;
-	Blob payload;
 	bool duplicate;
 	bool retain;
 	enum qos qos;
@@ -39,13 +38,13 @@ struct pubcomp_header
 	std::uint16_t packet_identifier;
 };
 
-template<typename String, typename Blob>
-inline void write_packet(byte_ostream& output, const publish_header<String, Blob>& header)
+template<typename String, typename Payload>
+inline void write_packet(byte_ostream& output, const publish_header<String>& header, const Payload& payload)
 {
 	typename std::underlying_type<variable_integer>::type remaining =
 	    2 + (header.qos != qos::at_most_once ? 2 : 0);
 
-	if (!protected_add(remaining, header.topic.size()) || !protected_add(remaining, header.payload.size())) {
+	if (!protected_add(remaining, header.topic.size()) || !protected_add(remaining, payload.size())) {
 		throw protocol_error{ "remaining size cannot be represented" };
 	}
 
@@ -60,7 +59,53 @@ inline void write_packet(byte_ostream& output, const publish_header<String, Blob
 		write_elements(output, header.packet_identifier);
 	}
 
-	write_blob<false>(output, header.payload);
+	write_blob<false>(output, payload);
+}
+
+template<typename String>
+inline bool read_packet(byte_istream& input, read_context& context, publish_header<String>& header,
+                        variable_integer_type& payload_size)
+{
+	if (context.sequence == 0) {
+		byte type;
+
+		if (!read_element(input, context, type)) {
+			return false;
+		}
+
+		header.duplicate = type >> 3 & 1;
+		header.qos       = static_cast<qos>(type >> 1 & 0x03);
+		header.retain    = type & 1;
+
+		if (header.qos != qos::at_most_once && header.qos != qos::at_least_once &&
+		    header.qos != qos::exactly_once) {
+			throw protocol_error{ "invalid QoS" };
+		}
+	}
+
+	if (context.sequence == 1) {
+		variable_integer remaining;
+
+		if (!read_element(input, context, remaining)) {
+			return false;
+		}
+
+		context.remaining_size = static_cast<variable_integer_type>(remaining);
+	}
+
+	if (context.sequence == 2 && !read_blob(input, context, header.topic)) {
+		return false;
+	}
+
+	if (header.qos != qos::at_most_once) {
+		if (!read_element(input, context, header.packet_identifier)) {
+			return false;
+		}
+	}
+
+	payload_size = context.remaining_size;
+
+	return true;
 }
 
 inline void write_packet(byte_ostream& output, const puback_header& header)

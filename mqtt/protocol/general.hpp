@@ -52,15 +52,17 @@ enum class qos
 
 struct read_context
 {
-	std::size_t available;
-	std::uint16_t sequence;
-	std::uint32_t sequence_data[2];
+	std::size_t available = 0;
+	std::uint8_t sequence = 0;
+	std::uint32_t sequence_data[2]{};
+	variable_integer_type remaining_size = 5;
 
 	void clear() noexcept
 	{
 		sequence         = 0;
 		sequence_data[0] = 0;
 		sequence_data[1] = 0;
+		remaining_size   = 5;
 	}
 };
 

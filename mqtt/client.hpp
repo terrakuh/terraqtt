@@ -15,12 +15,11 @@
 
 namespace mqtt {
 
-template<typename String, typename Blob, typename BasicLockable>
+template<typename String, typename BasicLockable>
 class basic_client_base
 {
 public:
 	typedef String string_type;
-	typedef Blob blob_type;
 
 	basic_client_base(protocol::byte_ostream& output, protocol::byte_istream& input)
 	    : _output{ &output }, _input{ &input }
@@ -63,7 +62,7 @@ public:
 	void publish(const Topic& topic, const Payload& payload, protocol::qos qos = protocol::qos::at_most_once,
 	             bool retain = false)
 	{
-		protocol::publish_header<const Topic&, const Payload&> header{ topic, payload };
+		protocol::publish_header<const Topic&> header{ topic };
 
 		header.qos               = qos;
 		header.retain            = retain;
@@ -71,7 +70,7 @@ public:
 
 		std::lock_guard<BasicLockable> _{ _output_mutex };
 
-		protocol::write_packet(*_output, header);
+		protocol::write_packet(*_output, header, payload);
 	}
 	void subscribe()
 	{
@@ -102,46 +101,64 @@ public:
 		switch (_read_type) {
 		case protocol::control_packet_type::reserved: break;
 		case protocol::control_packet_type::connack: {
+			constexpr auto index = 0;
+
 			if (!_read_context.sequence) {
-				_read_header.emplace<0>();
+				_read_header.template emplace<index>();
 			}
 
-			if (protocol::read_packet(*_input, _read_context, _read_header.get<0>())) {
+			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>())) {
 				_clear_read();
 			}
 
 			break;
 		}
-		// case protocol::control_packet_type::publish:
+		case protocol::control_packet_type::publish: {
+			constexpr auto index = 1;
+
+			if (!_read_context.sequence) {
+				_read_header.template emplace<index>();
+			}
+
+			protocol::variable_integer_type payload_size = 0;
+
+			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>(),
+			                          payload_size)) {
+				_clear_read();
+				on_publish(_read_header.template get<index>(), payload_size);
+			}
+
+			break;
+		}
 		// case protocol::control_packet_type::puback:
 		// case protocol::control_packet_type::pubrec:
 		// case protocol::control_packet_type::pubrel:
 		// case protocol::control_packet_type::pubcomp:
 		// case protocol::control_packet_type::suback:
 		case protocol::control_packet_type::unsuback: {
-			constexpr auto index = 1;
+			constexpr auto index = 2;
 
 			if (!_read_context.sequence) {
-				_read_header.emplace<index>();
+				_read_header.template emplace<index>();
 			}
 
-			if (protocol::read_packet(*_input, _read_context, _read_header.get<index>())) {
+			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>())) {
 				_clear_read();
-				on_unsuback(_read_header.get<index>());
+				on_unsuback(_read_header.template get<index>());
 			}
 
 			break;
 		}
 		case protocol::control_packet_type::pingresp: {
-			constexpr auto index = 2;
+			constexpr auto index = 3;
 
 			if (!_read_context.sequence) {
-				_read_header.emplace<index>();
+				_read_header.template emplace<index>();
 			}
 
-			if (protocol::read_packet(*_input, _read_context, _read_header.get<index>())) {
+			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>())) {
 				_clear_read();
-				on_pingresp(_read_header.get<index>());
+				on_pingresp(_read_header.template get<index>());
 			}
 
 			break;
@@ -153,19 +170,27 @@ public:
 	}
 
 protected:
-	virtual void on_message(const String& topic, const Blob& payload)
-	{}
-	virtual void on_pingresp(const protocol::pingresp_header& header)
+	virtual void on_publish(protocol::publish_header<String>& header,
+	                        protocol::variable_integer_type payload_size)
+	{
+		std::string s;
+		s.resize(payload_size);
+		_input->read(&s[0], s.size());
+		puts(s.c_str());
+	}
+	virtual void on_pingresp(protocol::pingresp_header& header)
 	{
 		puts("ping received");
 	}
-	virtual void on_unsuback(const protocol::unsuback_header& header)
+	virtual void on_unsuback(protocol::unsuback_header& header)
 	{}
 
 private:
 	protocol::read_context _read_context{};
 	protocol::control_packet_type _read_type = protocol::control_packet_type::reserved;
-	variant<protocol::connack_header, protocol::unsuback_header, protocol::pingresp_header> _read_header;
+	variant<protocol::connack_header, protocol::publish_header<String>, protocol::unsuback_header,
+	        protocol::pingresp_header>
+	    _read_header;
 	BasicLockable _output_mutex;
 	protocol::byte_ostream* _output;
 	protocol::byte_istream* _input;
@@ -178,14 +203,14 @@ private:
 	}
 };
 
-template<typename String, typename Blob>
-class basic_client : public basic_client_base<String, Blob, std::mutex>
+template<typename String>
+class basic_client : public basic_client_base<String, std::mutex>
 {
 public:
-	using basic_client_base<String, Blob, std::mutex>::basic_client_base;
+	using basic_client_base<String, std::mutex>::basic_client_base;
 };
 
-typedef basic_client<std::string, std::vector<protocol::byte>> client;
+typedef basic_client<std::string> client;
 
 } // namespace mqtt
 

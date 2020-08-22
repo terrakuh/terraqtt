@@ -16,6 +16,8 @@ inline bool read_element(byte_istream& input, read_context& context, byte& out)
 {
 	if (!context.available) {
 		return false;
+	} else if (!context.remaining_size) {
+		throw protocol_error{ "invalid remaining size" };
 	}
 
 	input.read(reinterpret_cast<byte_istream::char_type*>(&out), sizeof(out));
@@ -25,6 +27,7 @@ inline bool read_element(byte_istream& input, read_context& context, byte& out)
 	}
 
 	--context.available;
+	--context.remaining_size;
 	++context.sequence;
 
 	return true;
@@ -34,6 +37,8 @@ inline bool read_element(byte_istream& input, read_context& context, std::uint16
 {
 	if (context.available < 2) {
 		return false;
+	} else if (context.remaining_size < 2) {
+		throw protocol_error{ "invalid remaining size" };
 	}
 
 	byte_istream::char_type buffer[2];
@@ -46,6 +51,7 @@ inline bool read_element(byte_istream& input, read_context& context, std::uint16
 
 	out = buffer[0] << 8 | buffer[1];
 	context.available -= 2;
+	context.remaining_size -= 2;
 	++context.sequence;
 
 	return true;
@@ -56,6 +62,8 @@ inline bool read_element(byte_istream& input, read_context& context, variable_in
 	for (; context.sequence_data[1] < 4; ++context.sequence_data[1]) {
 		if (!context.available) {
 			return false;
+		} else if (!context.remaining_size) {
+			throw protocol_error{ "invalid remaining size" };
 		}
 
 		const auto c = input.get();
@@ -65,6 +73,7 @@ inline bool read_element(byte_istream& input, read_context& context, variable_in
 		}
 
 		--context.available;
+		--context.remaining_size;
 		context.sequence_data[0] = context.sequence_data[0] << 7 | (c & 0x7f);
 
 		if (!(c & 0x80)) {
@@ -78,6 +87,33 @@ inline bool read_element(byte_istream& input, read_context& context, variable_in
 	++context.sequence;
 
 	return true;
+}
+
+template<typename Blob>
+inline bool read_blob(byte_istream& input, read_context& context, Blob& blob)
+{
+	std::uint16_t size = static_cast<std::uint16_t>(context.sequence_data[0]);
+
+	if (!size && !read_element(input, context, size)) {
+		return false;
+	} else if (context.remaining_size < size) {
+		throw protocol_error{ "invalid remaining size" };
+	}
+
+	context.sequence_data[0] = size;
+
+	for (; context.sequence_data[0] && context.available;
+	     --context.sequence_data[0], --context.available, --context.remaining_size) {
+		const auto c = input.get();
+
+		if (!input) {
+			throw io_error{ "failed to read" };
+		}
+
+		blob.push_back(static_cast<typename Blob::value_type>(c));
+	}
+
+	return !context.sequence_data[0];
 }
 /*
 template<bool ReadSize, typename Blob>
