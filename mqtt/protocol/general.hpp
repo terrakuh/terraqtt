@@ -26,7 +26,8 @@ static_assert(sizeof(byte) == sizeof(byte_ostream::char_type), "sizes mismatch")
 
 enum class control_packet_type
 {
-	connect = 1,
+	reserved,
+	connect,
 	connack,
 	publish,
 	puback,
@@ -47,6 +48,20 @@ enum class qos
 	at_most_once,
 	at_least_once,
 	exactly_once
+};
+
+struct read_context
+{
+	std::size_t available;
+	std::uint16_t sequence;
+	std::uint32_t sequence_data[2];
+
+	void clear() noexcept
+	{
+		sequence         = 0;
+		sequence_data[0] = 0;
+		sequence_data[1] = 0;
+	}
 };
 
 class protocol_error : public std::runtime_error

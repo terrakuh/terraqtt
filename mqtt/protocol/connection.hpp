@@ -28,6 +28,22 @@ struct connect_header
 	std::uint16_t keep_alive;
 };
 
+struct connack_header
+{
+	enum class return_code
+	{
+		accepted,
+		unacceptable_version,
+		identifier_rejected,
+		server_unavailable,
+		bad_user_password,
+		not_authorized
+	};
+
+	bool session_present;
+	enum return_code return_code;
+};
+
 struct disconnect_header
 {};
 
@@ -38,7 +54,7 @@ inline void write_packet(byte_ostream& output, const connect_header<String, Will
 		throw protocol_error{ "invalid will" };
 	} else if (!header.username && header.password) {
 		throw protocol_error{ "invalid username/password combination" };
-	} else if (!header.clean_session && header.client_identifier.empty()) {
+	} else if (!header.clean_session && !header.client_identifier.size()) {
 		throw protocol_error{ "empty client identifier" };
 	}
 
@@ -77,6 +93,55 @@ inline void write_packet(byte_ostream& output, const connect_header<String, Will
 	if (header.password) {
 		write_blob<true>(output, *header.password);
 	}
+}
+
+inline bool read_packet(byte_istream& input, read_context& context, connack_header& header)
+{
+	if (context.sequence == 0) {
+		byte type;
+
+		if (!read_element(input, context, type)) {
+			return false;
+		} else if (type != static_cast<byte>(static_cast<int>(control_packet_type::connack) << 4)) {
+			throw protocol_error{ "invalid connack flags" };
+		}
+	}
+
+	if (context.sequence == 1) {
+		variable_integer remaining;
+
+		if (!read_element(input, context, remaining)) {
+			return false;
+		} else if (remaining != static_cast<variable_integer>(2)) {
+			throw protocol_error{ "invalid connack payload" };
+		}
+	}
+
+	if (context.sequence == 2) {
+		byte flags;
+
+		if (!read_element(input, context, flags)) {
+			return false;
+		} else if (flags & 0xfe) {
+			throw protocol_error{ "invalid connack flags" };
+		}
+
+		header.session_present = flags & 0x01;
+	}
+
+	if (context.sequence == 3) {
+		byte rc;
+
+		if (!read_element(input, context, rc)) {
+			return false;
+		} else if (rc > static_cast<byte>(connack_header::return_code::not_authorized)) {
+			throw protocol_error{ "invalid connack return code" };
+		}
+
+		header.return_code = static_cast<enum connack_header::return_code>(rc);
+	}
+
+	return true;
 }
 
 /**

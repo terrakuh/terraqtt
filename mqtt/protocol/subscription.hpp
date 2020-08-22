@@ -136,38 +136,29 @@ inline void write_packet(byte_ostream& output, const unsubscribe_header<TopicCon
 	}
 }
 
-/**
- * Writes a unsuback packet to the output stream.
- *
- * @exception see write_elements()
- * @param output[in] the output stream
- * @param header the unsuback header
- */
-inline void write_packet(byte_ostream& output, const unsuback_header& header)
+inline bool read_packet(byte_istream& input, read_context& context, unsuback_header& header)
 {
-	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::unsuback) << 4),
-	               static_cast<variable_integer>(2), header.packet_identifier);
-}
+	if (context.sequence == 0) {
+		byte type;
 
-inline void read_packet(byte_istream& input, unsuback_header& header)
-{
-	byte type;
-
-	read_element(input, type);
-
-	if (type != static_cast<byte>(static_cast<int>(control_packet_type::unsuback) << 4)) {
-		throw protocol_error{ "invalid unsuback flags" };
+		if (!read_element(input, context, type)) {
+			return false;
+		} else if (type != static_cast<byte>(static_cast<int>(control_packet_type::unsuback) << 4)) {
+			throw protocol_error{ "invalid unsuback flags" };
+		}
 	}
 
-	variable_integer remaining;
+	if (context.sequence == 1) {
+		variable_integer remaining;
 
-	read_element(input, remaining);
-
-	if (remaining != static_cast<variable_integer>(2)) {
-		throw protocol_error{ "invalid payload for unsuback" };
+		if (!read_element(input, context, remaining)) {
+			return false;
+		} else if (remaining != static_cast<variable_integer>(2)) {
+			throw protocol_error{ "invalid unsuback payload" };
+		}
 	}
 
-	read_element(input, header.packet_identifier);
+	return context.sequence == 2 && read_element(input, context, header.packet_identifier);
 }
 
 } // namespace protocol

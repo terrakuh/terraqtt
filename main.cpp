@@ -22,50 +22,23 @@ int main()
 {
 	std::signal(SIGINT, &handler);
 
-	asio::io_service service;
 	asio::ip::tcp::iostream stream;
 
 	stream.connect(asio::ip::tcp::endpoint{ asio::ip::address::from_string("127.0.0.1"), 1883 });
 
-	mqtt::client client{ stream };
+	mqtt::client client{ stream, stream };
 
 	client.connect("der.klient");
-	client.publish("/msg", { 'h', 'e', 'l', 'l', 'o', 0 });
+	client.publish(std::string{ "/msg" }, std::vector<char>{ 'h', 'e', 'l', 'l', 'o', 0 });
 
 	while (true) {
+		std::cout << "processed: " << client.process_one(stream.rdbuf()->available()) << "\n";
+
 		if (val == SIGINT) {
-			break;
+			client.ping();
+			val = 0;
 		}
 
-		service.run_one();
+		std::this_thread::sleep_for(std::chrono::seconds{ 1 });
 	}
-
-	/*	using namespace mqtt::protocol;
-	    connect_header<std::string, std::string, std::string> header{};
-
-	    header.client_identifier = "mqtt-client";
-	    header.clean_session     = true;
-	    header.keep_alive        = 60;
-	    std::string user         = "me";
-	    header.username          = &user;
-
-	    write_packet(stream, header);
-
-	    publish_header<std::string, std::string> h{};
-
-	    h.topic   = "/msg";
-	    h.payload = "hi";
-
-	    write_packet(stream, h);
-	    write_packet(stream, pingreq_header{});
-
-	    while (true) {
-	        if (val == SIGINT) {
-	            write_packet(stream, disconnect_header{});
-
-	            break;
-	        }
-
-	        service.run_one();
-	    }*/
 }
