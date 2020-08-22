@@ -114,10 +114,64 @@ inline void write_packet(byte_ostream& output, const puback_header& header)
 	               static_cast<variable_integer>(2), header.packet_identifier);
 }
 
+inline bool read_packet(byte_istream& input, read_context& context, puback_header& header)
+{
+	if (context.sequence == 0) {
+		byte type;
+
+		if (!read_element(input, context, type)) {
+			return false;
+		} else if (type != static_cast<byte>(static_cast<int>(control_packet_type::puback) << 4)) {
+			throw protocol_error{ "invalid puback flags" };
+		}
+	}
+
+	if (context.sequence == 1) {
+		variable_integer remaining;
+
+		if (!read_element(input, context, remaining)) {
+			return false;
+		} else if (remaining != static_cast<variable_integer>(2)) {
+			throw protocol_error{ "invalid puback payload" };
+		}
+
+		context.remaining_size = 2;
+	}
+
+	return read_element(input, context, header.packet_identifier);
+}
+
 inline void write_packet(byte_ostream& output, const pubrec_header& header)
 {
 	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::pubrec) << 4),
 	               static_cast<variable_integer>(2), header.packet_identifier);
+}
+
+inline bool read_packet(byte_istream& input, read_context& context, pubrec_header& header)
+{
+	if (context.sequence == 0) {
+		byte type;
+
+		if (!read_element(input, context, type)) {
+			return false;
+		} else if (type != static_cast<byte>(static_cast<int>(control_packet_type::pubrec) << 4)) {
+			throw protocol_error{ "invalid pubrec flags" };
+		}
+	}
+
+	if (context.sequence == 1) {
+		variable_integer remaining;
+
+		if (!read_element(input, context, remaining)) {
+			return false;
+		} else if (remaining != static_cast<variable_integer>(2)) {
+			throw protocol_error{ "invalid pubrec payload" };
+		}
+
+		context.remaining_size = 2;
+	}
+
+	return read_element(input, context, header.packet_identifier);
 }
 
 inline void write_packet(byte_ostream& output, const pubrel_header& header)
@@ -126,10 +180,64 @@ inline void write_packet(byte_ostream& output, const pubrel_header& header)
 	               static_cast<variable_integer>(2), header.packet_identifier);
 }
 
+inline bool read_packet(byte_istream& input, read_context& context, pubrel_header& header)
+{
+	if (context.sequence == 0) {
+		byte type;
+
+		if (!read_element(input, context, type)) {
+			return false;
+		} else if (type != static_cast<byte>(static_cast<int>(control_packet_type::pubrel) << 4)) {
+			throw protocol_error{ "invalid pubrel flags" };
+		}
+	}
+
+	if (context.sequence == 1) {
+		variable_integer remaining;
+
+		if (!read_element(input, context, remaining)) {
+			return false;
+		} else if (remaining != static_cast<variable_integer>(2)) {
+			throw protocol_error{ "invalid pubrel payload" };
+		}
+
+		context.remaining_size = 2;
+	}
+
+	return read_element(input, context, header.packet_identifier);
+}
+
 inline void write_packet(byte_ostream& output, const pubcomp_header& header)
 {
 	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::pubcomp) << 4),
 	               static_cast<variable_integer>(2), header.packet_identifier);
+}
+
+inline bool read_packet(byte_istream& input, read_context& context, pubcomp_header& header)
+{
+	if (context.sequence == 0) {
+		byte type;
+
+		if (!read_element(input, context, type)) {
+			return false;
+		} else if (type != static_cast<byte>(static_cast<int>(control_packet_type::pubcomp) << 4)) {
+			throw protocol_error{ "invalid pubcomp flags" };
+		}
+	}
+
+	if (context.sequence == 1) {
+		variable_integer remaining;
+
+		if (!read_element(input, context, remaining)) {
+			return false;
+		} else if (remaining != static_cast<variable_integer>(2)) {
+			throw protocol_error{ "invalid pubcomp payload" };
+		}
+
+		context.remaining_size = 2;
+	}
+
+	return read_element(input, context, header.packet_identifier);
 }
 
 } // namespace protocol

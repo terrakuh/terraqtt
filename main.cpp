@@ -1,8 +1,4 @@
 #include "mqtt/client.hpp"
-#include "mqtt/protocol/connection.hpp"
-#include "mqtt/protocol/ping.hpp"
-#include "mqtt/protocol/publishing.hpp"
-#include "mqtt/protocol/subscription.hpp"
 
 #include <boost/asio.hpp>
 #include <csignal>
@@ -28,17 +24,21 @@ int main()
 
 	mqtt::client client{ stream, stream };
 
-	client.connect("der.klient");
-	client.publish(std::string{ "/msg" }, std::vector<char>{ 'h', 'e', 'l', 'l', 'o', 0 });
+	client.connect("der.klient", true, mqtt::seconds{ 0 });
+	client.publish(std::string{ "output" }, std::vector<char>{ 'h', 'e', 'l', 'l', 'o', 0 }, mqtt::qos::at_least_once);
+	client.subscribe(
+	    { mqtt::subscribe_topic<std::string>{ "input", mqtt::qos::at_least_once } });
 
 	while (true) {
-		std::cout << "processed: " << client.process_one(stream.rdbuf()->available()) << "\n";
-
-		if (val == SIGINT) {
-			client.ping();
-			val = 0;
+		std::cout << "processed: " << client.process_one() << std::endl;
+		/*if (const auto c = client.process_one(stream.rdbuf()->available())) {
+			std::cout << "processed: " << c << "\n";
 		}
 
-		std::this_thread::sleep_for(std::chrono::seconds{ 1 });
+		if (val == SIGINT) {
+			break;
+		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });*/
 	}
 }

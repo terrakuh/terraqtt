@@ -6,40 +6,41 @@
 #include "writer.hpp"
 
 namespace mqtt {
+
+template<typename String>
+struct subscribe_topic
+{
+	String filter;
+	enum qos qos;
+};
+
 namespace protocol {
 
+enum class suback_return_code
+{
+	success0 = 0x00,
+	success1 = 0x01,
+	success2 = 0x02,
+	failure  = 0x80
+};
+
 /**
- * @tparam String see write_blob()
- * @tparam TopicContainer must hold the type subscribe_header::topic
+ * @tparam TopicContainer must hold the type subscribe_topic
  */
-template<typename String, typename TopicContainer>
+template<typename TopicContainer>
 struct subscribe_header
 {
-	struct topic
-	{
-		String filter;
-		enum qos qos;
-	};
-
 	TopicContainer topics;
 	std::uint16_t packet_identifier;
 };
 
 /**
- * @tparam ReturnCodeContainer must hold the type suback_header::return_code
+ * @tparam ReturnCodeContainer must hold the type suback_return_code
  */
 template<typename ReturnCodeContainer>
 struct suback_header
 {
-	enum class return_code
-	{
-		success0 = 0x00,
-		success1 = 0x01,
-		success2 = 0x02,
-		failure  = 0x80
-	};
-
-	static_assert(std::is_same<typename ReturnCodeContainer::value_type, return_code>::value,
+	static_assert(std::is_same<typename ReturnCodeContainer::value_type, suback_return_code>::value,
 	              "ReturnCodeContainer must return return_code");
 
 	ReturnCodeContainer return_codes;
@@ -67,11 +68,10 @@ struct unsuback_header
  * @exception see write_blob(), write_elements()
  * @param output[in] the output stream
  * @param header the subscribe header
- * @tparam String see subscribe_header
  * @tparam TopicContainer must meet the requirements of *Container*
  */
-template<typename String, typename TopicContainer>
-inline void write_packet(byte_ostream& output, const subscribe_header<String, TopicContainer>& header)
+template<typename TopicContainer>
+inline void write_packet(byte_ostream& output, const subscribe_header<TopicContainer>& header)
 {
 	typename std::underlying_type<variable_integer>::type remaining = 2;
 
@@ -144,7 +144,7 @@ inline bool read_packet(byte_istream& input, read_context& context,
 			return false;
 		}
 
-		header.return_codes.push_back(static_cast<enum suback_header<ReturnCodeContainer>::return_code>(rc));
+		header.return_codes.push_back(static_cast<suback_return_code>(rc));
 	}
 
 	return true;

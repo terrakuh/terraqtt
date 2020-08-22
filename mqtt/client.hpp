@@ -8,14 +8,19 @@
 #include "protocol/subscription.hpp"
 #include "variant.hpp"
 
+#include <chrono>
+#include <initializer_list>
 #include <limits>
 #include <mutex>
+#include <ratio>
 #include <string>
 #include <vector>
 
 namespace mqtt {
 
-template<typename String, typename BasicLockable>
+typedef std::chrono::duration<std::uint16_t> seconds;
+
+template<typename String, typename ReturnCodeContainer, typename BasicLockable>
 class basic_client_base
 {
 public:
@@ -37,12 +42,12 @@ public:
 	 * @param identifier the identifier of this client; must be present if `clean_session == false`
 	 * @param clean_session whether the session should be reset after disconnecting
 	 */
-	void connect(const String& identifier, bool clean_session = true, std::uint16_t keep_alive = 60)
+	void connect(const String& identifier, bool clean_session = true, seconds keep_alive = seconds{ 0 })
 	{
 		protocol::connect_header<const String&, const String&, const String&> header{ identifier };
 
 		header.clean_session = clean_session;
-		header.keep_alive    = keep_alive;
+		header.keep_alive    = keep_alive.count();
 
 		std::lock_guard<BasicLockable> _{ _output_mutex };
 
@@ -59,24 +64,24 @@ public:
 		}
 	}
 	template<typename Topic, typename Payload>
-	void publish(const Topic& topic, const Payload& payload, protocol::qos qos = protocol::qos::at_most_once,
-	             bool retain = false)
+	void publish(const Topic& topic, const Payload& payload, qos qos = qos::at_most_once, bool retain = false)
 	{
 		protocol::publish_header<const Topic&> header{ topic };
 
 		header.qos               = qos;
 		header.retain            = retain;
-		header.packet_identifier = 0;
+		header.packet_identifier = 1;
 
 		std::lock_guard<BasicLockable> _{ _output_mutex };
 
 		protocol::write_packet(*_output, header, payload);
 	}
-	void subscribe()
+	template<typename Topic>
+	void subscribe(std::initializer_list<Topic> topics)
 	{
-		protocol::subscribe_header<const String&, int> header{};
+		protocol::subscribe_header<const std::initializer_list<Topic>&> header{ topics };
 
-		// header.packet_identifier =
+		header.packet_identifier = 1;
 
 		std::lock_guard<BasicLockable> _{ _output_mutex };
 
@@ -130,13 +135,78 @@ public:
 
 			break;
 		}
-		// case protocol::control_packet_type::puback:
-		// case protocol::control_packet_type::pubrec:
-		// case protocol::control_packet_type::pubrel:
-		// case protocol::control_packet_type::pubcomp:
-		// case protocol::control_packet_type::suback:
-		case protocol::control_packet_type::unsuback: {
+		case protocol::control_packet_type::puback: {
 			constexpr auto index = 2;
+
+			if (!_read_context.sequence) {
+				_read_header.template emplace<index>();
+			}
+
+			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>())) {
+				_clear_read();
+				on_puback(_read_header.template get<index>());
+			}
+
+			break;
+		}
+		case protocol::control_packet_type::pubrec: {
+			constexpr auto index = 3;
+
+			if (!_read_context.sequence) {
+				_read_header.template emplace<index>();
+			}
+
+			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>())) {
+				_clear_read();
+				on_pubrec(_read_header.template get<index>());
+			}
+
+			break;
+		}
+		case protocol::control_packet_type::pubrel: {
+			constexpr auto index = 4;
+
+			if (!_read_context.sequence) {
+				_read_header.template emplace<index>();
+			}
+
+			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>())) {
+				_clear_read();
+				on_pubrel(_read_header.template get<index>());
+			}
+
+			break;
+		}
+		case protocol::control_packet_type::pubcomp: {
+			constexpr auto index = 5;
+
+			if (!_read_context.sequence) {
+				_read_header.template emplace<index>();
+			}
+
+			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>())) {
+				_clear_read();
+				on_pubcomp(_read_header.template get<index>());
+			}
+
+			break;
+		}
+		case protocol::control_packet_type::suback: {
+			constexpr auto index = 6;
+
+			if (!_read_context.sequence) {
+				_read_header.template emplace<index>();
+			}
+
+			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>())) {
+				_clear_read();
+				on_suback(_read_header.template get<index>());
+			}
+
+			break;
+		}
+		case protocol::control_packet_type::unsuback: {
+			constexpr auto index = 7;
 
 			if (!_read_context.sequence) {
 				_read_header.template emplace<index>();
@@ -150,7 +220,7 @@ public:
 			break;
 		}
 		case protocol::control_packet_type::pingresp: {
-			constexpr auto index = 3;
+			constexpr auto index = 8;
 
 			if (!_read_context.sequence) {
 				_read_header.template emplace<index>();
@@ -173,22 +243,39 @@ protected:
 	virtual void on_publish(protocol::publish_header<String>& header,
 	                        protocol::variable_integer_type payload_size)
 	{
+		printf("%s", "data received: ");
 		std::string s;
 		s.resize(payload_size);
 		_input->read(&s[0], s.size());
 		puts(s.c_str());
+
+		if (header.qos == qos::at_least_once) {
+			std::lock_guard<BasicLockable> _{ _output_mutex };
+
+			protocol::write_packet(*_output, protocol::puback_header{ header.packet_identifier });
+		}
 	}
-	virtual void on_pingresp(protocol::pingresp_header& header)
-	{
-		puts("ping received");
-	}
+	virtual void on_puback(protocol::puback_header& header)
+	{}
+	virtual void on_pubrec(protocol::pubrec_header& header)
+	{}
+	virtual void on_pubrel(protocol::pubrel_header& header)
+	{}
+	virtual void on_pubcomp(protocol::pubcomp_header& header)
+	{}
+	virtual void on_suback(protocol::suback_header<ReturnCodeContainer>& header)
+	{}
 	virtual void on_unsuback(protocol::unsuback_header& header)
+	{}
+	virtual void on_pingresp(protocol::pingresp_header& header)
 	{}
 
 private:
 	protocol::read_context _read_context{};
 	protocol::control_packet_type _read_type = protocol::control_packet_type::reserved;
-	variant<protocol::connack_header, protocol::publish_header<String>, protocol::unsuback_header,
+	variant<protocol::connack_header, protocol::publish_header<String>, protocol::puback_header,
+	        protocol::pubrec_header, protocol::pubrel_header, protocol::pubcomp_header,
+	        protocol::suback_header<ReturnCodeContainer>, protocol::unsuback_header,
 	        protocol::pingresp_header>
 	    _read_header;
 	BasicLockable _output_mutex;
@@ -204,10 +291,10 @@ private:
 };
 
 template<typename String>
-class basic_client : public basic_client_base<String, std::mutex>
+class basic_client : public basic_client_base<String, std::vector<protocol::suback_return_code>, std::mutex>
 {
 public:
-	using basic_client_base<String, std::mutex>::basic_client_base;
+	using basic_client_base<String, std::vector<protocol::suback_return_code>, std::mutex>::basic_client_base;
 };
 
 typedef basic_client<std::string> client;

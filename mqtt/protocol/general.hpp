@@ -11,6 +11,14 @@
 #include <utility>
 
 namespace mqtt {
+
+enum class qos
+{
+	at_most_once,
+	at_least_once,
+	exactly_once
+};
+
 namespace protocol {
 
 typedef std::uint8_t byte;
@@ -41,13 +49,6 @@ enum class control_packet_type
 	pingreq,
 	pingresp,
 	disconnect,
-};
-
-enum class qos
-{
-	at_most_once,
-	at_least_once,
-	exactly_once
 };
 
 struct read_context
