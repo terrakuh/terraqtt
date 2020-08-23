@@ -48,6 +48,10 @@ template<typename... Types>
 class variant
 {
 public:
+	variant()
+	{
+		_index = sizeof...(Types);
+	}
 	~variant()
 	{
 		clear();
@@ -92,7 +96,7 @@ public:
 private:
 	typename std::aligned_storage<detail::max_size_of<Types...>(), detail::max_align_of<Types...>()>::type
 	    _data;
-	std::size_t _index = sizeof...(Types);
+	std::size_t _index;
 
 	template<std::size_t Index>
 	void _clear() noexcept

@@ -12,6 +12,16 @@
 namespace mqtt {
 namespace protocol {
 
+enum class connack_return_code
+{
+	accepted,
+	unacceptable_version,
+	identifier_rejected,
+	server_unavailable,
+	bad_user_password,
+	not_authorized
+};
+
 template<typename String, typename WillMessage, typename Password>
 struct connect_header
 {
@@ -30,18 +40,8 @@ struct connect_header
 
 struct connack_header
 {
-	enum class return_code
-	{
-		accepted,
-		unacceptable_version,
-		identifier_rejected,
-		server_unavailable,
-		bad_user_password,
-		not_authorized
-	};
-
 	bool session_present;
-	enum return_code return_code;
+	connack_return_code return_code;
 };
 
 struct disconnect_header
@@ -134,11 +134,11 @@ inline bool read_packet(byte_istream& input, read_context& context, connack_head
 
 		if (!read_element(input, context, rc)) {
 			return false;
-		} else if (rc > static_cast<byte>(connack_header::return_code::not_authorized)) {
+		} else if (rc > static_cast<byte>(connack_return_code::not_authorized)) {
 			throw protocol_error{ "invalid connack return code" };
 		}
 
-		header.return_code = static_cast<enum connack_header::return_code>(rc);
+		header.return_code = static_cast<connack_return_code>(rc);
 	}
 
 	return true;

@@ -2,6 +2,7 @@
 #define MQTT_CLIENT_HPP_
 
 #include "detail/constrained_streambuf.hpp"
+#include "lock_guard.hpp"
 #include "protocol/connection.hpp"
 #include "protocol/ping.hpp"
 #include "protocol/publishing.hpp"
@@ -12,26 +13,23 @@
 #include <chrono>
 #include <initializer_list>
 #include <limits>
-#include <mutex>
 #include <ratio>
-#include <string>
-#include <vector>
 
 namespace mqtt {
 
 typedef std::chrono::duration<std::uint16_t> seconds;
 
 template<typename String, typename ReturnCodeContainer, typename BasicLockable>
-class basic_client_base
+class basic_client
 {
 public:
 	typedef String string_type;
 	typedef ReturnCodeContainer return_code_container_type;
 
-	basic_client_base(protocol::byte_ostream& output, protocol::byte_istream& input)
+	basic_client(protocol::byte_ostream& output, protocol::byte_istream& input)
 	    : _output{ &output }, _input{ &input }
 	{}
-	virtual ~basic_client_base()
+	virtual ~basic_client()
 	{
 		try {
 			disconnect();
@@ -44,21 +42,22 @@ public:
 	 * @param identifier the identifier of this client; must be present if `clean_session == false`
 	 * @param clean_session whether the session should be reset after disconnecting
 	 */
-	void connect(const String& identifier, bool clean_session = true, seconds keep_alive = seconds{ 0 })
+	template<typename Identifier>
+	void connect(const Identifier& identifier, bool clean_session = true, seconds keep_alive = seconds{ 0 })
 	{
-		protocol::connect_header<const String&, const String&, const String&> header{ identifier };
+		protocol::connect_header<const Identifier&, const String&, const String&> header{ identifier };
 
 		header.clean_session = clean_session;
 		header.keep_alive    = keep_alive.count();
 
-		std::lock_guard<BasicLockable> _{ _output_mutex };
+		lock_guard<BasicLockable> _{ _output_mutex };
 
 		protocol::write_packet(*_output, header);
 	}
 	void disconnect()
 	{
 		if (_output) {
-			std::lock_guard<BasicLockable> _{ _output_mutex };
+			lock_guard<BasicLockable> _{ _output_mutex };
 
 			protocol::write_packet(*_output, protocol::disconnect_header{});
 
@@ -74,7 +73,7 @@ public:
 		header.retain            = retain;
 		header.packet_identifier = 1;
 
-		std::lock_guard<BasicLockable> _{ _output_mutex };
+		lock_guard<BasicLockable> _{ _output_mutex };
 
 		protocol::write_packet(*_output, header, payload);
 	}
@@ -85,18 +84,25 @@ public:
 
 		header.packet_identifier = 1;
 
-		std::lock_guard<BasicLockable> _{ _output_mutex };
+		lock_guard<BasicLockable> _{ _output_mutex };
 
 		protocol::write_packet(*_output, header);
 	}
 	void ping()
 	{
-		std::lock_guard<BasicLockable> _{ _output_mutex };
+		lock_guard<BasicLockable> _{ _output_mutex };
 
 		protocol::write_packet(*_output, protocol::pingreq_header{});
 	}
 	std::size_t process_one(std::size_t available = std::numeric_limits<std::size_t>::max())
 	{
+		if (const auto skip = _read_ignore < available ? _read_ignore : available) {
+			_input->ignore(skip);
+
+			_read_ignore -= skip;
+			available -= skip;
+		}
+
 		if (!(_read_context.available = available)) {
 			return 0;
 		} // read new packet
@@ -137,6 +143,15 @@ public:
 				std::istream payload{ &buf };
 
 				on_publish(_read_header.template get<index>(), payload);
+
+				_read_ignore  = buf.remaining();
+				const auto av = available - _read_context.available - payload_size + buf.remaining();
+
+				if (const auto skip = _read_ignore < av ? _read_ignore : av) {
+					_input->ignore(skip);
+
+					_read_ignore -= skip;
+				}
 			}
 
 			break;
@@ -264,6 +279,7 @@ protected:
 	{}
 
 private:
+	std::size_t _read_ignore = 0;
 	protocol::read_context _read_context{};
 	protocol::control_packet_type _read_type = protocol::control_packet_type::reserved;
 	variant<protocol::connack_header, protocol::publish_header<String>, protocol::puback_header,
@@ -282,15 +298,6 @@ private:
 		_read_context.clear();
 	}
 };
-
-template<typename String>
-class basic_client : public basic_client_base<String, std::vector<protocol::suback_return_code>, std::mutex>
-{
-public:
-	using basic_client_base<String, std::vector<protocol::suback_return_code>, std::mutex>::basic_client_base;
-};
-
-typedef basic_client<std::string> client;
 
 } // namespace mqtt
 
