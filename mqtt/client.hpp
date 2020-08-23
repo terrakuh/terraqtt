@@ -49,6 +49,7 @@ public:
 
 		header.clean_session = clean_session;
 		header.keep_alive    = keep_alive.count();
+		_keep_alive          = keep_alive;
 
 		lock_guard<BasicLockable> _{ _output_mutex };
 
@@ -93,6 +94,13 @@ public:
 		lock_guard<BasicLockable> _{ _output_mutex };
 
 		protocol::write_packet(*_output, protocol::pingreq_header{});
+	}
+	void update_state()
+	{
+		if (_next_keep_alive <= std::chrono::steady_clock::now()) {
+			puts("pinging");
+			ping();
+		}
 	}
 	std::size_t process_one(std::size_t available = std::numeric_limits<std::size_t>::max())
 	{
@@ -257,6 +265,10 @@ public:
 		default: throw protocol::protocol_error{ "invalid packet type" };
 		}
 
+		if (_read_context.available != available) {
+			_next_keep_alive = std::chrono::steady_clock::now() + _keep_alive;
+		}
+
 		return available - _read_context.available;
 	}
 
@@ -287,6 +299,8 @@ private:
 	        protocol::suback_header<ReturnCodeContainer>, protocol::unsuback_header,
 	        protocol::pingresp_header>
 	    _read_header;
+	std::chrono::steady_clock::time_point _next_keep_alive;
+	seconds _keep_alive;
 	BasicLockable _output_mutex;
 	protocol::byte_ostream* _output;
 	protocol::byte_istream* _input;

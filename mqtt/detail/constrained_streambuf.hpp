@@ -9,7 +9,7 @@ namespace detail {
 class constrained_streambuf : public std::streambuf
 {
 public:
-	constrained_streambuf(std::streambuf& parent, std::size_t remaining) noexcept : _parent{ parent }
+	constrained_streambuf(std::streambuf& parent, std::size_t remaining) noexcept : _parent(parent)
 	{
 		_remaining = remaining;
 	}

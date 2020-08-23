@@ -1,4 +1,5 @@
 #include "mqtt/client.hpp"
+#include "mqtt/static_container.hpp"
 #include "mqtt/string_view.hpp"
 
 #include <boost/asio.hpp>
@@ -15,7 +16,9 @@ inline void handler(int signal)
 	val = signal;
 }
 
-typedef mqtt::basic_client<std::string, std::vector<mqtt::protocol::suback_return_code>, std::mutex> client;
+typedef mqtt::basic_client<std::string, mqtt::static_container<1, mqtt::protocol::suback_return_code>,
+                           std::mutex>
+    client;
 
 class my_client : public client
 {
@@ -39,21 +42,22 @@ int main()
 
 	my_client client{ stream, stream };
 
-	client.connect(mqtt::string_view{ "der.klient" }, true, mqtt::seconds{ 0 });
+	client.connect(mqtt::string_view{ "der.klient" }, true, mqtt::seconds{ 10 });
 	client.publish(mqtt::string_view{ "output" }, mqtt::string_view{ "hello, world" },
 	               mqtt::qos::at_least_once, true);
 	client.subscribe({ mqtt::subscribe_topic<mqtt::string_view>{ "input", mqtt::qos::at_most_once } });
 
 	while (true) {
-		std::cout << "processed: " << client.process_one() << std::endl;
-		/*if (const auto c = client.process_one(stream.rdbuf()->available())) {
-		    std::cout << "processed: " << c << "\n";
+		if (const auto c = client.process_one(stream.rdbuf()->available())) {
+			std::cout << "processed: " << c << "\n";
 		}
+
+		client.update_state();
 
 		if (val == SIGINT) {
-		    break;
+			break;
 		}
 
-		std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });*/
+		std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });
 	}
 }
