@@ -6,6 +6,9 @@ namespace mqtt {
 class null_mutex
 {
 public:
+	null_mutex()                       = default;
+	null_mutex(const null_mutex& copy) = delete;
+	null_mutex(null_mutex&& move)      = delete;
 	void lock() noexcept
 	{}
 	void unlock() noexcept

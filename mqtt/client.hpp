@@ -19,14 +19,14 @@ namespace mqtt {
 
 typedef std::chrono::duration<std::uint16_t> seconds;
 
-template<typename String, typename ReturnCodeContainer, typename BasicLockable>
+template<typename String, typename ReturnCodeContainer, typename BasicLockable, typename Clock>
 class basic_client
 {
 public:
 	typedef String string_type;
 	typedef ReturnCodeContainer return_code_container_type;
 
-	basic_client(protocol::byte_ostream& output, protocol::byte_istream& input)
+	basic_client(protocol::byte_ostream& output, protocol::byte_istream& input) noexcept
 	    : _output{ &output }, _input{ &input }
 	{}
 	virtual ~basic_client()
@@ -41,6 +41,7 @@ public:
 	 *
 	 * @param identifier the identifier of this client; must be present if `clean_session == false`
 	 * @param clean_session whether the session should be reset after disconnecting
+	 * @todo add will and authentication
 	 */
 	template<typename Identifier>
 	void connect(const Identifier& identifier, bool clean_session = true, seconds keep_alive = seconds{ 0 })
@@ -89,6 +90,9 @@ public:
 
 		protocol::write_packet(*_output, header);
 	}
+	/**
+	 * Sends a ping request to broker.
+	*/
 	void ping()
 	{
 		lock_guard<BasicLockable> _{ _output_mutex };
@@ -97,11 +101,17 @@ public:
 	}
 	void update_state()
 	{
-		if (_next_keep_alive <= std::chrono::steady_clock::now()) {
+		if (_next_keep_alive <= Clock::now()) {
 			puts("pinging");
 			ping();
 		}
 	}
+	/**
+	 * Processes up to `available` bytes. Can be used in a non-blocking fashion.
+	 * 
+	 * @param available the amount of bytes available to read
+	 * @return the amount of bytes processed; does not include publish packet payload
+	*/
 	std::size_t process_one(std::size_t available = std::numeric_limits<std::size_t>::max())
 	{
 		if (const auto skip = _read_ignore < available ? _read_ignore : available) {
@@ -150,7 +160,7 @@ public:
 				detail::constrained_streambuf buf{ *_input->rdbuf(), payload_size };
 				std::istream payload{ &buf };
 
-				on_publish(_read_header.template get<index>(), payload);
+				on_publish(_read_header.template get<index>(), payload, payload_size);
 
 				_read_ignore  = buf.remaining();
 				const auto av = available - _read_context.available - payload_size + buf.remaining();
@@ -266,14 +276,23 @@ public:
 		}
 
 		if (_read_context.available != available) {
-			_next_keep_alive = std::chrono::steady_clock::now() + _keep_alive;
+			_next_keep_alive = Clock::now() + _keep_alive;
 		}
 
 		return available - _read_context.available;
 	}
+	protocol::byte_ostream* output() noexcept
+	{
+		return _output;
+	}
+	protocol::byte_istream* input() noexcept
+	{
+		return _input;
+	}
 
 protected:
-	virtual void on_publish(protocol::publish_header<string_type>& header, std::istream& payload)
+	virtual void on_publish(protocol::publish_header<string_type>& header, std::istream& payload,
+	                        std::size_t payload_size)
 	{}
 	virtual void on_puback(protocol::puback_header& header)
 	{}
@@ -299,7 +318,7 @@ private:
 	        protocol::suback_header<ReturnCodeContainer>, protocol::unsuback_header,
 	        protocol::pingresp_header>
 	    _read_header;
-	std::chrono::steady_clock::time_point _next_keep_alive;
+	typename Clock::time_point _next_keep_alive;
 	seconds _keep_alive;
 	BasicLockable _output_mutex;
 	protocol::byte_ostream* _output;

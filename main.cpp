@@ -1,4 +1,5 @@
 #include "mqtt/client.hpp"
+#include "mqtt/null_mutex.hpp"
 #include "mqtt/static_container.hpp"
 #include "mqtt/string_view.hpp"
 
@@ -17,7 +18,7 @@ inline void handler(int signal)
 }
 
 typedef mqtt::basic_client<std::string, mqtt::static_container<1, mqtt::protocol::suback_return_code>,
-                           std::mutex>
+                           mqtt::null_mutex, std::chrono::steady_clock>
     client;
 
 class my_client : public client
@@ -26,9 +27,15 @@ public:
 	using client::client;
 
 protected:
-	void on_publish(mqtt::protocol::publish_header<string_type>& header, std::istream& payload) override
+	void on_publish(mqtt::protocol::publish_header<string_type>& header, std::istream& payload,
+	                std::size_t payload_size) override
 	{
 		std::cout << "received: " << payload.rdbuf() << std::endl;
+
+		if (header.qos == mqtt::qos::at_least_once) {
+			mqtt::protocol::write_packet(*output(),
+			                             mqtt::protocol::puback_header{ header.packet_identifier });
+		}
 	}
 };
 
@@ -49,7 +56,7 @@ int main()
 
 	while (true) {
 		if (const auto c = client.process_one(stream.rdbuf()->available())) {
-			std::cout << "processed: " << c << "\n";
+			std::cout << "processed: " << c << " bytes\n";
 		}
 
 		client.update_state();
