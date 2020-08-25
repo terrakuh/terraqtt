@@ -70,8 +70,8 @@ struct unsuback_header
  * @param header the subscribe header
  * @tparam TopicContainer must meet the requirements of *Container*
  */
-template<typename TopicContainer>
-inline void write_packet(byte_ostream& output, const subscribe_header<TopicContainer>& header)
+template<typename Output, typename TopicContainer>
+inline void write_packet(Output& output, const subscribe_header<TopicContainer>& header)
 {
 	typename std::underlying_type<variable_integer>::type remaining = 2;
 
@@ -98,8 +98,8 @@ inline void write_packet(byte_ostream& output, const subscribe_header<TopicConta
  * @param header the suback header
  * @tparam ReturnCodeContainer must meet the requirements of *Container*
  */
-template<typename ReturnCodeContainer>
-inline void write_packet(byte_ostream& output, const suback_header<ReturnCodeContainer>& header)
+template<typename Output, typename ReturnCodeContainer>
+inline void write_packet(Output& output, const suback_header<ReturnCodeContainer>& header)
 {
 	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::suback) << 4),
 	               static_cast<variable_integer>(2 + header.return_codes.size()), header.packet_identifier);
@@ -109,8 +109,8 @@ inline void write_packet(byte_ostream& output, const suback_header<ReturnCodeCon
 	}
 }
 
-template<typename ReturnCodeContainer>
-inline bool read_packet(byte_istream& input, read_context& context,
+template<typename Input, typename ReturnCodeContainer>
+inline bool read_packet(Input& input, read_context& context,
                         suback_header<ReturnCodeContainer>& header)
 {
 	if (context.sequence == 0) {
@@ -158,8 +158,8 @@ inline bool read_packet(byte_istream& input, read_context& context,
  * @param header the unsubscribe header
  * @tparam TopicContainer must meet the requirements of *Container*
  */
-template<typename TopicContainer>
-inline void write_packet(byte_ostream& output, const unsubscribe_header<TopicContainer>& header)
+template<typename Output, typename TopicContainer>
+inline void write_packet(Output& output, const unsubscribe_header<TopicContainer>& header)
 {
 	typename std::underlying_type<variable_integer>::type remaining = 2;
 
@@ -177,7 +177,8 @@ inline void write_packet(byte_ostream& output, const unsubscribe_header<TopicCon
 	}
 }
 
-inline bool read_packet(byte_istream& input, read_context& context, unsuback_header& header)
+template<typename Input>
+inline bool read_packet(Input& input, read_context& context, unsuback_header& header)
 {
 	if (context.sequence == 0) {
 		byte type;

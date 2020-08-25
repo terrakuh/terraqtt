@@ -1,12 +1,10 @@
 #ifndef MQTT_PROTOCOL_GENERAL_HPP_
 #define MQTT_PROTOCOL_GENERAL_HPP_
 
+#include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <limits>
-#include <ostream>
 #include <stdexcept>
-#include <string>
 #include <type_traits>
 #include <utility>
 
@@ -22,15 +20,11 @@ enum class qos
 namespace protocol {
 
 typedef std::uint8_t byte;
-typedef std::ostream byte_ostream;
-typedef std::istream byte_istream;
 typedef std::uint32_t variable_integer_type;
 
 enum class variable_integer : variable_integer_type
 {
 };
-
-static_assert(sizeof(byte) == sizeof(byte_ostream::char_type), "sizes mismatch");
 
 enum class control_packet_type
 {
@@ -67,30 +61,36 @@ struct read_context
 	}
 };
 
-class protocol_error : public std::runtime_error
+class error : public std::runtime_error
 {
 public:
 	using runtime_error::runtime_error;
 };
 
-class io_error : public std::runtime_error
+class protocol_error : public error
 {
 public:
-	using runtime_error::runtime_error;
+	using error::error;
 };
 
-inline std::size_t size_of(byte_istream& input)
+class io_error : public error
 {
-	const auto pos = input.tellg();
+public:
+	using error::error;
+};
 
-	input.seekg(0, std::ios::end);
+// inline std::size_t size_of(byte_istream& input)
+// {
+// 	const auto pos = input.tellg();
 
-	const auto end = input.tellg();
+// 	input.seekg(0, std::ios::end);
 
-	input.seekg(pos);
+// 	const auto end = input.tellg();
 
-	return static_cast<std::size_t>(end - pos);
-}
+// 	input.seekg(pos);
+
+// 	return static_cast<std::size_t>(end - pos);
+// }
 
 template<typename Element>
 constexpr std::size_t elements_max_size() noexcept

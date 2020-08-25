@@ -90,14 +90,18 @@ inline byte* write_elements(byte* output, Element&& element, Elements&&... eleme
 	                      std::forward<Elements>(elements)...);
 }
 
-template<typename... Elements>
-inline void write_elements(byte_ostream& output, Elements&&... elements)
+template<typename Output, typename... Elements>
+inline void write_elements(Output& output, Elements&&... elements)
 {
 	byte buffer[elements_max_size<Elements...>()];
 
 	output.write(
-	    reinterpret_cast<const byte_ostream::char_type*>(buffer),
+	    reinterpret_cast<const typename Output::char_type*>(buffer),
 	    static_cast<std::size_t>(write_elements(buffer, std::forward<Elements>(elements)...) - buffer));
+
+	if (!output) {
+		throw io_error{ "failed to write elements" };
+	}
 }
 
 /**
@@ -110,11 +114,14 @@ inline void write_elements(byte_ostream& output, Elements&&... elements)
  * @param blob the blob
  * @tparam WriteSize if `true` writes the size of the blob as uint16
  * @tparam Blob must meet the requirements of *Container* and the size of its type must match
- * `sizeof(byte_ostream::char_type)`
+ * `sizeof(Output::char_type)`
  */
-template<bool WriteSize, typename Blob>
-inline void write_blob(byte_ostream& output, const Blob& blob)
+template<bool WriteSize, typename Output, typename Blob>
+inline void write_blob(Output& output, const Blob& blob)
 {
+	static_assert(sizeof(typename Blob::value_type) == sizeof(typename Output::char_type),
+	              "sizeof blob and output types must match");
+
 	if (WriteSize) {
 		const auto size = blob.size();
 
@@ -125,14 +132,12 @@ inline void write_blob(byte_ostream& output, const Blob& blob)
 		write_elements(output, static_cast<std::uint16_t>(size));
 	}
 
-	std::transform(
-	    blob.begin(), blob.end(),
-	    std::ostream_iterator<byte_ostream::char_type, byte_ostream::char_type, byte_ostream::traits_type>{
-	        output },
-	    [](typename Blob::value_type c) { return static_cast<byte_ostream::char_type>(c); });
+	for (auto i : blob) {
+		output.write(reinterpret_cast<const typename Output::char_type*>(&i), sizeof(i));
 
-	if (!output) {
-		throw io_error{ "failed to write to the stream" };
+		if (!output) {
+			throw io_error{ "failed to write to the stream" };
+		}
 	}
 }
 

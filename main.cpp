@@ -17,8 +17,9 @@ inline void handler(int signal)
 	val = signal;
 }
 
-typedef mqtt::basic_client<std::string, mqtt::static_container<1, mqtt::protocol::suback_return_code>,
-                           mqtt::null_mutex, std::chrono::steady_clock>
+typedef mqtt::basic_client<std::istream, std::ostream, std::string,
+                           mqtt::static_container<1, mqtt::protocol::suback_return_code>, mqtt::null_mutex,
+                           std::chrono::steady_clock>
     client;
 
 class my_client : public client
@@ -47,19 +48,28 @@ int main()
 
 	stream.connect(asio::ip::tcp::endpoint{ asio::ip::address::from_string("127.0.0.1"), 1883 });
 
-	my_client client{ stream, stream };
+	my_client client{ &stream, &stream };
 
 	client.connect(mqtt::string_view{ "der.klient" }, true, mqtt::seconds{ 10 });
 	client.publish(mqtt::string_view{ "output" }, mqtt::string_view{ "hello, world" },
 	               mqtt::qos::at_least_once, true);
 	client.subscribe({ mqtt::subscribe_topic<mqtt::string_view>{ "input", mqtt::qos::at_most_once } });
+	client.output()->flush();
 
-	while (true) {
-		if (const auto c = client.process_one(stream.rdbuf()->available())) {
+	while (stream) {
+		boost::system::error_code ec;
+
+		if (const auto c = client.process_one(stream.socket().available(ec))) {
 			std::cout << "processed: " << c << " bytes\n";
 		}
 
+		if (ec) {
+			std::cerr << "stream error: " << ec << std::endl;
+			break;
+		}
+
 		client.update_state();
+		client.output()->flush();
 
 		if (val == SIGINT) {
 			break;

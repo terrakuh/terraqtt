@@ -6,13 +6,15 @@
 namespace mqtt {
 namespace protocol {
 
-inline control_packet_type peek_type(byte_istream& input, read_context& context)
+template<typename Input>
+inline control_packet_type peek_type(Input& input, read_context& context)
 {
 	return input.good() ? static_cast<control_packet_type>(input.peek() >> 4 & 0x0f)
 	                    : throw io_error{ "failed to read" };
 }
 
-inline bool read_element(byte_istream& input, read_context& context, byte& out)
+template<typename Input>
+inline bool read_element(Input& input, read_context& context, byte& out)
 {
 	if (!context.available) {
 		return false;
@@ -20,7 +22,7 @@ inline bool read_element(byte_istream& input, read_context& context, byte& out)
 		throw protocol_error{ "invalid remaining size" };
 	}
 
-	input.read(reinterpret_cast<byte_istream::char_type*>(&out), sizeof(out));
+	input.read(reinterpret_cast<typename Input::char_type*>(&out), sizeof(out));
 
 	if (!input) {
 		throw io_error{ "failed to read" };
@@ -33,7 +35,8 @@ inline bool read_element(byte_istream& input, read_context& context, byte& out)
 	return true;
 }
 
-inline bool read_element(byte_istream& input, read_context& context, std::uint16_t& out)
+template<typename Input>
+inline bool read_element(Input& input, read_context& context, std::uint16_t& out)
 {
 	if (context.available < 2) {
 		return false;
@@ -41,7 +44,7 @@ inline bool read_element(byte_istream& input, read_context& context, std::uint16
 		throw protocol_error{ "invalid remaining size" };
 	}
 
-	byte_istream::char_type buffer[2];
+	typename Input::char_type buffer[2];
 
 	input.read(buffer, sizeof(buffer));
 
@@ -57,7 +60,8 @@ inline bool read_element(byte_istream& input, read_context& context, std::uint16
 	return true;
 }
 
-inline bool read_element(byte_istream& input, read_context& context, variable_integer& out)
+template<typename Input>
+inline bool read_element(Input& input, read_context& context, variable_integer& out)
 {
 	for (; context.sequence_data[1] < 4; ++context.sequence_data[1]) {
 		if (!context.available) {
@@ -89,8 +93,8 @@ inline bool read_element(byte_istream& input, read_context& context, variable_in
 	return true;
 }
 
-template<typename Blob>
-inline bool read_blob(byte_istream& input, read_context& context, Blob& blob)
+template<typename Input, typename Blob>
+inline bool read_blob(Input& input, read_context& context, Blob& blob)
 {
 	std::uint16_t size = static_cast<std::uint16_t>(context.sequence_data[0]);
 

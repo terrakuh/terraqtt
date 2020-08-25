@@ -19,15 +19,18 @@ namespace mqtt {
 
 typedef std::chrono::duration<std::uint16_t> seconds;
 
-template<typename String, typename ReturnCodeContainer, typename BasicLockable, typename Clock>
+template<typename Input, typename Output, typename String, typename ReturnCodeContainer,
+         typename BasicLockable, typename Clock>
 class basic_client
 {
 public:
 	typedef String string_type;
 	typedef ReturnCodeContainer return_code_container_type;
 
-	basic_client(protocol::byte_ostream& output, protocol::byte_istream& input) noexcept
-	    : _output{ &output }, _input{ &input }
+	/**
+	 * @constructor asdqwd
+	 */
+	basic_client(Input* input, Output* output) noexcept : _output{ output }, _input{ input }
 	{}
 	virtual ~basic_client()
 	{
@@ -41,6 +44,8 @@ public:
 	 *
 	 * @param identifier the identifier of this client; must be present if `clean_session == false`
 	 * @param clean_session whether the session should be reset after disconnecting
+	 * @param keep_alive after what timeout the broker should think the client is offline; `0` means no
+	 * timeout
 	 * @todo add will and authentication
 	 */
 	template<typename Identifier>
@@ -79,6 +84,12 @@ public:
 
 		protocol::write_packet(*_output, header, payload);
 	}
+	/**
+	 * Subscribes to one or more topics.
+	 *
+	 * @param topics the topics
+	 * @todo add packet identifier
+	 */
 	template<typename Topic>
 	void subscribe(std::initializer_list<Topic> topics)
 	{
@@ -92,13 +103,18 @@ public:
 	}
 	/**
 	 * Sends a ping request to broker.
-	*/
+	 */
 	void ping()
 	{
 		lock_guard<BasicLockable> _{ _output_mutex };
 
 		protocol::write_packet(*_output, protocol::pingreq_header{});
 	}
+	/**
+	 * Updates the keep alive state.
+	 *
+	 * @todo add timeout
+	 */
 	void update_state()
 	{
 		if (_next_keep_alive <= Clock::now()) {
@@ -108,10 +124,10 @@ public:
 	}
 	/**
 	 * Processes up to `available` bytes. Can be used in a non-blocking fashion.
-	 * 
+	 *
 	 * @param available the amount of bytes available to read
 	 * @return the amount of bytes processed; does not include publish packet payload
-	*/
+	 */
 	std::size_t process_one(std::size_t available = std::numeric_limits<std::size_t>::max())
 	{
 		if (const auto skip = _read_ignore < available ? _read_ignore : available) {
@@ -281,13 +297,13 @@ public:
 
 		return available - _read_context.available;
 	}
-	protocol::byte_ostream* output() noexcept
-	{
-		return _output;
-	}
-	protocol::byte_istream* input() noexcept
+	Input* input() noexcept
 	{
 		return _input;
+	}
+	Output* output() noexcept
+	{
+		return _output;
 	}
 
 protected:
@@ -318,11 +334,11 @@ private:
 	        protocol::suback_header<ReturnCodeContainer>, protocol::unsuback_header,
 	        protocol::pingresp_header>
 	    _read_header;
-	typename Clock::time_point _next_keep_alive;
+	typename Clock::time_point _next_keep_alive = Clock::time_point::max();
 	seconds _keep_alive;
 	BasicLockable _output_mutex;
-	protocol::byte_ostream* _output;
-	protocol::byte_istream* _input;
+	Input* _input;
+	Output* _output;
 
 	void _clear_read() noexcept
 	{

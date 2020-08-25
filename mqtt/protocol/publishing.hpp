@@ -38,8 +38,8 @@ struct pubcomp_header
 	std::uint16_t packet_identifier;
 };
 
-template<typename String, typename Payload>
-inline void write_packet(byte_ostream& output, const publish_header<String>& header, const Payload& payload)
+template<typename Output, typename String, typename Payload>
+inline void write_packet(Output& output, const publish_header<String>& header, const Payload& payload)
 {
 	typename std::underlying_type<variable_integer>::type remaining =
 	    2 + (header.qos != qos::at_most_once ? 2 : 0);
@@ -62,8 +62,8 @@ inline void write_packet(byte_ostream& output, const publish_header<String>& hea
 	write_blob<false>(output, payload);
 }
 
-template<typename String>
-inline bool read_packet(byte_istream& input, read_context& context, publish_header<String>& header,
+template<typename Input, typename String>
+inline bool read_packet(Input& input, read_context& context, publish_header<String>& header,
                         variable_integer_type& payload_size)
 {
 	if (context.sequence == 0) {
@@ -108,13 +108,15 @@ inline bool read_packet(byte_istream& input, read_context& context, publish_head
 	return true;
 }
 
-inline void write_packet(byte_ostream& output, const puback_header& header)
+template<typename Output>
+inline void write_packet(Output& output, const puback_header& header)
 {
 	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::puback) << 4),
 	               static_cast<variable_integer>(2), header.packet_identifier);
 }
 
-inline bool read_packet(byte_istream& input, read_context& context, puback_header& header)
+template<typename Input>
+inline bool read_packet(Input& input, read_context& context, puback_header& header)
 {
 	if (context.sequence == 0) {
 		byte type;
@@ -141,13 +143,15 @@ inline bool read_packet(byte_istream& input, read_context& context, puback_heade
 	return read_element(input, context, header.packet_identifier);
 }
 
-inline void write_packet(byte_ostream& output, const pubrec_header& header)
+template<typename Output>
+inline void write_packet(Output& output, const pubrec_header& header)
 {
 	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::pubrec) << 4),
 	               static_cast<variable_integer>(2), header.packet_identifier);
 }
 
-inline bool read_packet(byte_istream& input, read_context& context, pubrec_header& header)
+template<typename Input>
+inline bool read_packet(Input& input, read_context& context, pubrec_header& header)
 {
 	if (context.sequence == 0) {
 		byte type;
@@ -174,13 +178,15 @@ inline bool read_packet(byte_istream& input, read_context& context, pubrec_heade
 	return read_element(input, context, header.packet_identifier);
 }
 
-inline void write_packet(byte_ostream& output, const pubrel_header& header)
+template<typename Output>
+inline void write_packet(Output& output, const pubrel_header& header)
 {
 	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::pubrel) << 4),
 	               static_cast<variable_integer>(2), header.packet_identifier);
 }
 
-inline bool read_packet(byte_istream& input, read_context& context, pubrel_header& header)
+template<typename Input>
+inline bool read_packet(Input& input, read_context& context, pubrel_header& header)
 {
 	if (context.sequence == 0) {
 		byte type;
@@ -207,13 +213,15 @@ inline bool read_packet(byte_istream& input, read_context& context, pubrel_heade
 	return read_element(input, context, header.packet_identifier);
 }
 
-inline void write_packet(byte_ostream& output, const pubcomp_header& header)
+template<typename Output>
+inline void write_packet(Output& output, const pubcomp_header& header)
 {
 	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::pubcomp) << 4),
 	               static_cast<variable_integer>(2), header.packet_identifier);
 }
 
-inline bool read_packet(byte_istream& input, read_context& context, pubcomp_header& header)
+template<typename Input>
+inline bool read_packet(Input& input, read_context& context, pubcomp_header& header)
 {
 	if (context.sequence == 0) {
 		byte type;

@@ -14,13 +14,15 @@ struct pingreq_header
 struct pingresp_header
 {};
 
-inline void write_packet(byte_ostream& output, const pingreq_header& header)
+template<typename Output>
+inline void write_packet(Output& output, const pingreq_header& header)
 {
 	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::pingreq) << 4),
 	               static_cast<variable_integer>(0));
 }
 
-inline bool read_packet(byte_istream& input, read_context& context, pingresp_header& header)
+template<typename Input>
+inline bool read_packet(Input& input, read_context& context, pingresp_header& header)
 {
 	if (context.sequence == 0) {
 		byte type;

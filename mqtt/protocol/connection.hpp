@@ -47,8 +47,8 @@ struct connack_header
 struct disconnect_header
 {};
 
-template<typename String, typename WillMessage, typename Password>
-inline void write_packet(byte_ostream& output, const connect_header<String, WillMessage, Password>& header)
+template<typename Output, typename String, typename WillMessage, typename Password>
+inline void write_packet(Output& output, const connect_header<String, WillMessage, Password>& header)
 {
 	if (!header.will && (header.will_qos != qos::at_most_once || header.will_retain)) {
 		throw protocol_error{ "invalid will" };
@@ -95,7 +95,8 @@ inline void write_packet(byte_ostream& output, const connect_header<String, Will
 	}
 }
 
-inline bool read_packet(byte_istream& input, read_context& context, connack_header& header)
+template<typename Input>
+inline bool read_packet(Input& input, read_context& context, connack_header& header)
 {
 	if (context.sequence == 0) {
 		byte type;
@@ -151,7 +152,8 @@ inline bool read_packet(byte_istream& input, read_context& context, connack_head
  * @param output[in] the output stream
  * @param header the disconnect header
  */
-inline void write_packet(byte_ostream& output, const disconnect_header& header)
+template<typename Output>
+inline void write_packet(Output& output, const disconnect_header& header)
 {
 	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::disconnect) << 4),
 	               static_cast<variable_integer>(0));
