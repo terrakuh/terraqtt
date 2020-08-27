@@ -348,6 +348,6 @@ private:
 	}
 };
 
-} // namespace mqtt
+} // namespace terraqtt
 
 #endif

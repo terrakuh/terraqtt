@@ -48,6 +48,6 @@ inline bool read_packet(Input& input, read_context& context, pingresp_header& he
 }
 
 } // namespace protocol
-} // namespace mqtt
+} // namespace terraqtt
 
 #endif

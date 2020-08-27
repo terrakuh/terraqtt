@@ -19,6 +19,6 @@ public:
 	}
 };
 
-} // namespace mqtt
+} // namespace terraqtt
 
 #endif

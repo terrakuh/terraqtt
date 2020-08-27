@@ -6,13 +6,13 @@ project(terraqtt
 
 set(CMAKE_CXX_STANDARD 11)
 
-option(MQTT_BUILD_EXAMPLES ON)
+option(TERRAQTT_BUILD_EXAMPLES ON)
 
 add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME}
 	INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>")
 
-if(MQTT_BUILD_EXAMPLES)
+if(TERRAQTT_BUILD_EXAMPLES)
 	find_package(Boost 1.65 REQUIRED COMPONENTS system)
 	find_package(Threads REQUIRED)
 	add_executable(playground "examples/playground.cpp")

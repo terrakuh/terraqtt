@@ -119,6 +119,6 @@ inline bool protected_add(Left& left, Right right) noexcept
 }
 
 } // namespace protocol
-} // namespace mqtt
+} // namespace terraqtt
 
 #endif

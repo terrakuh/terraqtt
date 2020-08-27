@@ -160,6 +160,6 @@ inline void write_packet(Output& output, const disconnect_header& header)
 }
 
 } // namespace protocol
-} // namespace mqtt
+} // namespace terraqtt
 
 #endif

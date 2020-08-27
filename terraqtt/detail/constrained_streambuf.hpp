@@ -42,6 +42,6 @@ private:
 };
 
 } // namespace detail
-} // namespace mqtt
+} // namespace terraqtt
 
 #endif

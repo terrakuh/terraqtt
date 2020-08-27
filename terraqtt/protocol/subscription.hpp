@@ -204,6 +204,6 @@ inline bool read_packet(Input& input, read_context& context, unsuback_header& he
 }
 
 } // namespace protocol
-} // namespace mqtt
+} // namespace terraqtt
 
 #endif

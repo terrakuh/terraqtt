@@ -153,6 +153,6 @@ inline void read_blob(byte_istream& input, variable_integer remaining_size, Blob
 }*/
 
 } // namespace protocol
-} // namespace mqtt
+} // namespace terraqtt
 
 #endif

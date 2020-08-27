@@ -39,6 +39,6 @@ private:
 	std::size_t _length;
 };
 
-} // namespace mqtt
+} // namespace terraqtt
 
 #endif

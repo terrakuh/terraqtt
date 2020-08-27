@@ -22,6 +22,6 @@ private:
 	Lockable& _lock;
 };
 
-} // namespace mqtt
+} // namespace terraqtt
 
 #endif

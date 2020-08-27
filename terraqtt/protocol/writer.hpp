@@ -142,6 +142,6 @@ inline void write_blob(Output& output, const Blob& blob)
 }
 
 } // namespace protocol
-} // namespace mqtt
+} // namespace terraqtt
 
 #endif
