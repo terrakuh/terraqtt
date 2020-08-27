@@ -4,8 +4,15 @@ project(mqtt)
 
 set(CMAKE_CXX_STANDARD 11)
 
-find_package(Boost REQUIRED COMPONENTS system)
+option(MQTT_BUILD_EXAMPLES ON)
+
+find_package(Boost 1.65 REQUIRED COMPONENTS system)
 find_package(Threads REQUIRED)
 
-add_executable(main "main.cpp")
-target_link_libraries(main Boost::boost Boost::system Threads::Threads)
+if(MQTT_BUILD_EXAMPLES)
+  add_executable(playground "examples/playground.cpp")
+  target_link_libraries(main Boost::boost Boost::system Threads::Threads)
+endif()
+
+install(DIRECTORY mqtt
+  DESTINATION include)

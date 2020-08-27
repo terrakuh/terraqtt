@@ -7,6 +7,7 @@
 #include <csignal>
 #include <iostream>
 #include <string>
+#include <thread>
 
 using namespace boost;
 
@@ -59,7 +60,7 @@ int main()
 	while (stream) {
 		boost::system::error_code ec;
 
-		if (const auto c = client.process_one(stream.socket().available(ec))) {
+		if (const auto c = client.process_one(stream.rdbuf()->lowest_layer().available(ec))) {
 			std::cout << "processed: " << c << " bytes\n";
 		}
 
