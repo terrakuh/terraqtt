@@ -1,11 +1,11 @@
-#ifndef MQTT_PROTOCOL_SUBSCRIPTION_HPP_
-#define MQTT_PROTOCOL_SUBSCRIPTION_HPP_
+#ifndef TERRAQTT_PROTOCOL_SUBSCRIPTION_HPP_
+#define TERRAQTT_PROTOCOL_SUBSCRIPTION_HPP_
 
 #include "general.hpp"
 #include "reader.hpp"
 #include "writer.hpp"
 
-namespace mqtt {
+namespace terraqtt {
 
 template<typename String>
 struct subscribe_topic

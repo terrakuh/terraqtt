@@ -1,5 +1,5 @@
-#ifndef MQTT_CLIENT_HPP_
-#define MQTT_CLIENT_HPP_
+#ifndef TERRAQTT_CLIENT_HPP_
+#define TERRAQTT_CLIENT_HPP_
 
 #include "detail/constrained_streambuf.hpp"
 #include "lock_guard.hpp"
@@ -15,7 +15,7 @@
 #include <limits>
 #include <ratio>
 
-namespace mqtt {
+namespace terraqtt {
 
 typedef std::chrono::duration<std::uint16_t> seconds;
 

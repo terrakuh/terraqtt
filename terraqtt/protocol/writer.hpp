@@ -1,12 +1,12 @@
-#ifndef MQTT_PROTOCOL_WRITER_HPP_
-#define MQTT_PROTOCOL_WRITER_HPP_
+#ifndef TERRAQTT_PROTOCOL_WRITER_HPP_
+#define TERRAQTT_PROTOCOL_WRITER_HPP_
 
 #include "general.hpp"
 
 #include <algorithm>
 #include <iterator>
 
-namespace mqtt {
+namespace terraqtt {
 namespace protocol {
 
 /**

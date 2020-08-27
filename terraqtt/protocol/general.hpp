@@ -1,5 +1,5 @@
-#ifndef MQTT_PROTOCOL_GENERAL_HPP_
-#define MQTT_PROTOCOL_GENERAL_HPP_
+#ifndef TERRAQTT_PROTOCOL_GENERAL_HPP_
+#define TERRAQTT_PROTOCOL_GENERAL_HPP_
 
 #include <cstddef>
 #include <cstdint>
@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace mqtt {
+namespace terraqtt {
 
 enum class qos
 {

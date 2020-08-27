@@ -1,11 +1,11 @@
-#ifndef MQTT_VARIANT_HPP_
-#define MQTT_VARIANT_HPP_
+#ifndef TERRAQTT_VARIANT_HPP_
+#define TERRAQTT_VARIANT_HPP_
 
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
 
-namespace mqtt {
+namespace terraqtt {
 namespace detail {
 
 template<typename Type>
@@ -112,6 +112,6 @@ private:
 	}
 };
 
-} // namespace mqtt
+} // namespace terraqtt
 
 #endif

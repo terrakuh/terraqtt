@@ -1,7 +1,7 @@
-#ifndef MQTT_NULL_MUTEX_HPP_
-#define MQTT_NULL_MUTEX_HPP_
+#ifndef TERRAQTT_NULL_MUTEX_HPP_
+#define TERRAQTT_NULL_MUTEX_HPP_
 
-namespace mqtt {
+namespace terraqtt {
 
 class null_mutex
 {

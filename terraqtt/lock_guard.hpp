@@ -1,7 +1,7 @@
-#ifndef MQTT_LOCK_GUARD_HPP_
-#define MQTT_LOCK_GUARD_HPP_
+#ifndef TERRAQTT_LOCK_GUARD_HPP_
+#define TERRAQTT_LOCK_GUARD_HPP_
 
-namespace mqtt {
+namespace terraqtt {
 
 template<typename Lockable>
 class lock_guard

@@ -1,9 +1,9 @@
-#ifndef MQTT_DETAIL_CONSTRAINED_STREAMBUF_HPP_
-#define MQTT_DETAIL_CONSTRAINED_STREAMBUF_HPP_
+#ifndef TERRAQTT_DETAIL_CONSTRAINED_STREAMBUF_HPP_
+#define TERRAQTT_DETAIL_CONSTRAINED_STREAMBUF_HPP_
 
 #include <streambuf>
 
-namespace mqtt {
+namespace terraqtt {
 namespace detail {
 
 class constrained_streambuf : public std::streambuf

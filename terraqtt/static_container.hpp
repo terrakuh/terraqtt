@@ -1,12 +1,12 @@
-#ifndef MQTT_STATIC_CONTAINER_HPP_
-#define MQTT_STATIC_CONTAINER_HPP_
+#ifndef TERRAQTT_STATIC_CONTAINER_HPP_
+#define TERRAQTT_STATIC_CONTAINER_HPP_
 
 #include <cstddef>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
 
-namespace mqtt {
+namespace terraqtt {
 
 template<std::size_t Size, typename Type>
 class static_container

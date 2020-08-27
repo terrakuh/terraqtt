@@ -1,11 +1,11 @@
-#ifndef MQTT_PROTOCOL_PING_HPP_
-#define MQTT_PROTOCOL_PING_HPP_
+#ifndef TERRAQTT_PROTOCOL_PING_HPP_
+#define TERRAQTT_PROTOCOL_PING_HPP_
 
 #include "general.hpp"
 #include "reader.hpp"
 #include "writer.hpp"
 
-namespace mqtt {
+namespace terraqtt {
 namespace protocol {
 
 struct pingreq_header

@@ -1,9 +1,9 @@
-#ifndef MQTT_PROTOCOL_READER_HPP_
-#define MQTT_PROTOCOL_READER_HPP_
+#ifndef TERRAQTT_PROTOCOL_READER_HPP_
+#define TERRAQTT_PROTOCOL_READER_HPP_
 
 #include "general.hpp"
 
-namespace mqtt {
+namespace terraqtt {
 namespace protocol {
 
 template<typename Input>

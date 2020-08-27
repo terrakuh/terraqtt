@@ -1,5 +1,5 @@
-#ifndef MQTT_PROTOCOL_CONNECTION_HPP_
-#define MQTT_PROTOCOL_CONNECTION_HPP_
+#ifndef TERRAQTT_PROTOCOL_CONNECTION_HPP_
+#define TERRAQTT_PROTOCOL_CONNECTION_HPP_
 
 #include "general.hpp"
 #include "reader.hpp"
@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace mqtt {
+namespace terraqtt {
 namespace protocol {
 
 enum class connack_return_code

@@ -1,10 +1,10 @@
-#ifndef MQTT_STRING_VIEW_HPP_
-#define MQTT_STRING_VIEW_HPP_
+#ifndef TERRAQTT_STRING_VIEW_HPP_
+#define TERRAQTT_STRING_VIEW_HPP_
 
 #include <cstddef>
 #include <string>
 
-namespace mqtt {
+namespace terraqtt {
 
 class string_view
 {
