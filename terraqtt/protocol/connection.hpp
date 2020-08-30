@@ -1,6 +1,7 @@
 #ifndef TERRAQTT_PROTOCOL_CONNECTION_HPP_
 #define TERRAQTT_PROTOCOL_CONNECTION_HPP_
 
+#include "../error.hpp"
 #include "general.hpp"
 #include "reader.hpp"
 #include "writer.hpp"
@@ -48,14 +49,18 @@ struct disconnect_header
 {};
 
 template<typename Output, typename String, typename WillMessage, typename Password>
-inline void write_packet(Output& output, const connect_header<String, WillMessage, Password>& header)
+inline void write_packet(Output& output, std::error_code& ec,
+                         const connect_header<String, WillMessage, Password>& header)
 {
 	if (!header.will && (header.will_qos != qos::at_most_once || header.will_retain)) {
-		throw protocol_error{ "invalid will" };
+		ec = errc::bad_will;
+		return;
 	} else if (!header.username && header.password) {
-		throw protocol_error{ "invalid username/password combination" };
+		ec = errc::bad_username_password;
+		return;
 	} else if (!header.clean_session && !header.client_identifier.size()) {
-		throw protocol_error{ "empty client identifier" };
+		ec = errc::empty_client_identifier;
+		return;
 	}
 
 	// fixed header & protocol name & level & connect flags
@@ -71,60 +76,79 @@ inline void write_packet(Output& output, const connect_header<String, WillMessag
 	    (header.will && !protected_add(remaining, header.will->second.size())) ||
 	    (header.username && !protected_add(remaining, header.username->size())) ||
 	    (header.password && !protected_add(remaining, header.password->size()))) {
-		throw protocol_error{ "remaining size cannot be represented" };
+		ec = errc::payload_too_large;
+		return;
 	}
 
-	write_elements(output, byte{ static_cast<int>(control_packet_type::connect) << 4 },
+	write_elements(output, ec, byte{ static_cast<int>(control_packet_type::connect) << 4 },
 	               static_cast<variable_integer>(remaining), std::uint16_t{ 4 }, byte{ 'M' }, byte{ 'Q' },
 	               byte{ 'T' }, byte{ 'T' }, protocol_level, connect_flags, header.keep_alive);
 
+	if (ec) {
+		return;
+	}
+
 	// payload
-	write_blob<true>(output, header.client_identifier);
+	if (write_blob<true>(output, ec, header.client_identifier), ec) {
+		return;
+	}
 
 	if (header.will) {
-		write_blob<true>(output, header.will->first);
-		write_blob<true>(output, header.will->second);
+		if (write_blob<true>(output, ec, header.will->first), ec) {
+			return;
+		}
+
+		if (write_blob<true>(output, ec, header.will->second), ec) {
+			return;
+		}
 	}
 
 	if (header.username) {
-		write_blob<true>(output, *header.username);
+		if (write_blob<true>(output, ec, *header.username), ec) {
+			return;
+		}
 	}
 
 	if (header.password) {
-		write_blob<true>(output, *header.password);
+		if (write_blob<true>(output, ec, *header.password), ec) {
+			return;
+		}
 	}
 }
 
 template<typename Input>
-inline bool read_packet(Input& input, read_context& context, connack_header& header)
+inline bool read_packet(Input& input, std::error_code& ec, read_context& context, connack_header& header)
 {
 	if (context.sequence == 0) {
 		byte type;
 
-		if (!read_element(input, context, type)) {
+		if (!read_element(input, ec, context, type) || ec) {
 			return false;
 		} else if (type != static_cast<byte>(static_cast<int>(control_packet_type::connack) << 4)) {
-			throw protocol_error{ "invalid connack flags" };
+			ec = errc::bad_connack_flags;
+			return false;
 		}
 	}
 
 	if (context.sequence == 1) {
 		variable_integer remaining;
 
-		if (!read_element(input, context, remaining)) {
+		if (!read_element(input, ec, context, remaining) || ec) {
 			return false;
 		} else if (remaining != static_cast<variable_integer>(2)) {
-			throw protocol_error{ "invalid connack payload" };
+			ec = errc::bad_connack_payload;
+			return false;
 		}
 	}
 
 	if (context.sequence == 2) {
 		byte flags;
 
-		if (!read_element(input, context, flags)) {
+		if (!read_element(input, ec, context, flags) || ec) {
 			return false;
 		} else if (flags & 0xfe) {
-			throw protocol_error{ "invalid connack flags" };
+			ec = errc::bad_connack_flags;
+			return false;
 		}
 
 		header.session_present = flags & 0x01;
@@ -133,10 +157,11 @@ inline bool read_packet(Input& input, read_context& context, connack_header& hea
 	if (context.sequence == 3) {
 		byte rc;
 
-		if (!read_element(input, context, rc)) {
+		if (!read_element(input, ec, context, rc) || ec) {
 			return false;
 		} else if (rc > static_cast<byte>(connack_return_code::not_authorized)) {
-			throw protocol_error{ "invalid connack return code" };
+			ec = errc::bad_connack_return_code;
+			return false;
 		}
 
 		header.return_code = static_cast<connack_return_code>(rc);
@@ -153,9 +178,9 @@ inline bool read_packet(Input& input, read_context& context, connack_header& hea
  * @param header the disconnect header
  */
 template<typename Output>
-inline void write_packet(Output& output, const disconnect_header& header)
+inline void write_packet(Output& output, std::error_code& ec, const disconnect_header& header)
 {
-	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::disconnect) << 4),
+	write_elements(output, ec, static_cast<byte>(static_cast<int>(control_packet_type::disconnect) << 4),
 	               static_cast<variable_integer>(0));
 }
 

@@ -1,6 +1,7 @@
 #ifndef TERRAQTT_PROTOCOL_SUBSCRIPTION_HPP_
 #define TERRAQTT_PROTOCOL_SUBSCRIPTION_HPP_
 
+#include "../error.hpp"
 #include "general.hpp"
 #include "reader.hpp"
 #include "writer.hpp"
@@ -71,22 +72,33 @@ struct unsuback_header
  * @tparam TopicContainer must meet the requirements of *Container*
  */
 template<typename Output, typename TopicContainer>
-inline void write_packet(Output& output, const subscribe_header<TopicContainer>& header)
+inline void write_packet(Output& output, std::error_code& ec, const subscribe_header<TopicContainer>& header)
 {
 	typename std::underlying_type<variable_integer>::type remaining = 2;
 
 	for (const auto& i : header.topics) {
 		if (!protected_add(remaining, 3u) || !protected_add(remaining, i.filter.size())) {
-			throw protocol_error{ "remaining size cannot be represented" };
+			ec = errc::payload_too_large;
+			return;
 		}
 	}
 
-	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::subscribe) << 4 | 0x02),
+	write_elements(output, ec,
+	               static_cast<byte>(static_cast<int>(control_packet_type::subscribe) << 4 | 0x02),
 	               static_cast<variable_integer>(remaining), header.packet_identifier);
 
+	if (ec) {
+		return;
+	}
+
 	for (const auto& i : header.topics) {
-		write_blob<true>(output, i.filter);
-		write_elements(output, static_cast<byte>(i.qos));
+		if (write_blob<true>(output, ec, i.filter), ec) {
+			return;
+		}
+
+		if (write_elements(output, ec, static_cast<byte>(i.qos)), ec) {
+			return;
+		}
 	}
 }
 
@@ -99,48 +111,56 @@ inline void write_packet(Output& output, const subscribe_header<TopicContainer>&
  * @tparam ReturnCodeContainer must meet the requirements of *Container*
  */
 template<typename Output, typename ReturnCodeContainer>
-inline void write_packet(Output& output, const suback_header<ReturnCodeContainer>& header)
+inline void write_packet(Output& output, std::error_code& ec,
+                         const suback_header<ReturnCodeContainer>& header)
 {
-	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::suback) << 4),
+	write_elements(output, ec, static_cast<byte>(static_cast<int>(control_packet_type::suback) << 4),
 	               static_cast<variable_integer>(2 + header.return_codes.size()), header.packet_identifier);
 
+	if (ec) {
+		return;
+	}
+
 	for (auto i : header.return_codes) {
-		write_elements(output, static_cast<byte>(i));
+		if (write_elements(output, ec, static_cast<byte>(i)), ec) {
+			return;
+		}
 	}
 }
 
 template<typename Input, typename ReturnCodeContainer>
-inline bool read_packet(Input& input, read_context& context,
+inline bool read_packet(Input& input, std::error_code& ec, read_context& context,
                         suback_header<ReturnCodeContainer>& header)
 {
 	if (context.sequence == 0) {
 		byte type;
 
-		if (!read_element(input, context, type)) {
+		if (!read_element(input, ec, context, type) || ec) {
 			return false;
 		} else if (type != static_cast<byte>(static_cast<int>(control_packet_type::suback) << 4)) {
-			throw protocol_error{ "invalid suback flags" };
+			ec = errc::bad_suback_flags;
+			return false;
 		}
 	}
 
 	if (context.sequence == 1) {
 		variable_integer remaining;
 
-		if (!read_element(input, context, remaining)) {
+		if (!read_element(input, ec, context, remaining) || ec) {
 			return false;
 		}
 
 		context.remaining_size = static_cast<variable_integer_type>(remaining);
 	}
 
-	if (context.sequence == 2 && !read_element(input, context, header.packet_identifier)) {
+	if (context.sequence == 2 && !read_element(input, ec, context, header.packet_identifier) || ec) {
 		return false;
 	}
 
 	while (context.remaining_size) {
 		byte rc;
 
-		if (!read_element(input, context, rc)) {
+		if (!read_element(input, ec, context, rc) || ec) {
 			return false;
 		}
 
@@ -159,48 +179,57 @@ inline bool read_packet(Input& input, read_context& context,
  * @tparam TopicContainer must meet the requirements of *Container*
  */
 template<typename Output, typename TopicContainer>
-inline void write_packet(Output& output, const unsubscribe_header<TopicContainer>& header)
+inline void write_packet(Output& output, std::error_code& ec,
+                         const unsubscribe_header<TopicContainer>& header)
 {
 	typename std::underlying_type<variable_integer>::type remaining = 2;
 
 	for (const auto& i : header.topics) {
 		if (!protected_add(remaining, 2u) || !protected_add(remaining, i.size())) {
-			throw protocol_error{ "remaining size cannot be represented" };
+			ec = errc::payload_too_large;
+			return;
 		}
 	}
 
-	write_elements(output, static_cast<byte>(static_cast<int>(control_packet_type::unsubscribe) << 4 | 0x02),
+	write_elements(output, ec,
+	               static_cast<byte>(static_cast<int>(control_packet_type::unsubscribe) << 4 | 0x02),
 	               static_cast<variable_integer>(remaining), header.packet_identifier);
 
-	for (const auto& i : header.topics) {
-		write_blob<true>(output, i);
+	if (!ec) {
+		for (const auto& i : header.topics) {
+			if (write_blob<true>(output, ec, i), ec) {
+				return;
+			}
+		}
 	}
 }
 
 template<typename Input>
-inline bool read_packet(Input& input, read_context& context, unsuback_header& header)
+inline bool read_packet(Input& input, std::error_code& ec, read_context& context, unsuback_header& header)
 {
 	if (context.sequence == 0) {
 		byte type;
 
-		if (!read_element(input, context, type)) {
+		if (!read_element(input, ec, context, type) || ec) {
 			return false;
 		} else if (type != static_cast<byte>(static_cast<int>(control_packet_type::unsuback) << 4)) {
-			throw protocol_error{ "invalid unsuback flags" };
+			ec = errc::bad_unsuback_flags;
+			return false;
 		}
 	}
 
 	if (context.sequence == 1) {
 		variable_integer remaining;
 
-		if (!read_element(input, context, remaining)) {
+		if (!read_element(input, ec, context, remaining) || ec) {
 			return false;
 		} else if (remaining != static_cast<variable_integer>(2)) {
-			throw protocol_error{ "invalid unsuback payload" };
+			ec = errc::bad_unsuback_payload;
+			return false;
 		}
 	}
 
-	return context.sequence == 2 && read_element(input, context, header.packet_identifier);
+	return context.sequence == 2 && read_element(input, ec, context, header.packet_identifier);
 }
 
 } // namespace protocol

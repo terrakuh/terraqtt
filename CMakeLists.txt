@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.1)
 
 project(terraqtt
-	VERSION 0.1.0
+	VERSION 0.2.0
 	LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
-option(TERRAQTT_BUILD_EXAMPLES ON)
+option(TERRAQTT_BUILD_EXAMPLES "Build some example projects." ON)
 
 add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME}
@@ -16,7 +16,11 @@ if(TERRAQTT_BUILD_EXAMPLES)
 	find_package(Boost 1.65 REQUIRED COMPONENTS system)
 	find_package(Threads REQUIRED)
 	add_executable(playground "examples/playground.cpp")
-	target_link_libraries(playground Boost::boost Boost::system Threads::Threads)
+	target_link_libraries(playground
+		${PROJECT_NAME}
+		Boost::boost
+		Boost::system
+		Threads::Threads)
 endif()
 
 # install

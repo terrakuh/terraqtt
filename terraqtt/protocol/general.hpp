@@ -61,37 +61,6 @@ struct read_context
 	}
 };
 
-class error : public std::runtime_error
-{
-public:
-	using runtime_error::runtime_error;
-};
-
-class protocol_error : public error
-{
-public:
-	using error::error;
-};
-
-class io_error : public error
-{
-public:
-	using error::error;
-};
-
-// inline std::size_t size_of(byte_istream& input)
-// {
-// 	const auto pos = input.tellg();
-
-// 	input.seekg(0, std::ios::end);
-
-// 	const auto end = input.tellg();
-
-// 	input.seekg(pos);
-
-// 	return static_cast<std::size_t>(end - pos);
-// }
-
 template<typename Element>
 constexpr std::size_t elements_max_size() noexcept
 {

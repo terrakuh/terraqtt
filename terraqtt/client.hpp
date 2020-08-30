@@ -27,17 +27,11 @@ public:
 	typedef String string_type;
 	typedef ReturnCodeContainer return_code_container_type;
 
-	/**
-	 * @constructor asdqwd
-	 */
 	basic_client(Input* input, Output* output) noexcept : _output{ output }, _input{ input }
 	{}
 	virtual ~basic_client()
 	{
-		try {
-			disconnect();
-		} catch (...) {
-		}
+		disconnect();
 	}
 	/**
 	 * Connects to the MQTT broker.
@@ -49,40 +43,46 @@ public:
 	 * @todo add will and authentication
 	 */
 	template<typename Identifier>
-	void connect(const Identifier& identifier, bool clean_session = true, seconds keep_alive = seconds{ 0 })
+	std::error_code connect(const Identifier& identifier, bool clean_session = true,
+	                        seconds keep_alive = seconds{ 0 })
 	{
 		protocol::connect_header<const Identifier&, const String&, const String&> header{ identifier };
-
 		header.clean_session = clean_session;
 		header.keep_alive    = keep_alive.count();
 		_keep_alive          = keep_alive;
 
 		lock_guard<BasicLockable> _{ _output_mutex };
-
-		protocol::write_packet(*_output, header);
+		std::error_code ec;
+		protocol::write_packet(*_output, ec, header);
+		return ec;
 	}
-	void disconnect()
+	std::error_code disconnect()
 	{
 		if (_output) {
 			lock_guard<BasicLockable> _{ _output_mutex };
-
-			protocol::write_packet(*_output, protocol::disconnect_header{});
+			std::error_code ec;
+			protocol::write_packet(*_output, ec, protocol::disconnect_header{});
 
 			_output = nullptr;
+
+			return ec;
 		}
+
+		return {};
 	}
 	template<typename Topic, typename Payload>
-	void publish(const Topic& topic, const Payload& payload, qos qos = qos::at_most_once, bool retain = false)
+	std::error_code publish(const Topic& topic, const Payload& payload, qos qos = qos::at_most_once,
+	                        bool retain = false)
 	{
 		protocol::publish_header<const Topic&> header{ topic };
-
 		header.qos               = qos;
 		header.retain            = retain;
 		header.packet_identifier = 1;
 
 		lock_guard<BasicLockable> _{ _output_mutex };
-
-		protocol::write_packet(*_output, header, payload);
+		std::error_code ec;
+		protocol::write_packet(*_output, ec, header, payload);
+		return ec;
 	}
 	/**
 	 * Subscribes to one or more topics.
@@ -91,36 +91,38 @@ public:
 	 * @todo add packet identifier
 	 */
 	template<typename Topic>
-	void subscribe(std::initializer_list<Topic> topics)
+	std::error_code subscribe(std::initializer_list<Topic> topics)
 	{
 		protocol::subscribe_header<const std::initializer_list<Topic>&> header{ topics };
-
 		header.packet_identifier = 1;
 
 		lock_guard<BasicLockable> _{ _output_mutex };
-
-		protocol::write_packet(*_output, header);
+		std::error_code ec;
+		protocol::write_packet(*_output, ec, header);
+		return ec;
 	}
 	/**
 	 * Sends a ping request to broker.
 	 */
-	void ping()
+	std::error_code ping()
 	{
 		lock_guard<BasicLockable> _{ _output_mutex };
-
-		protocol::write_packet(*_output, protocol::pingreq_header{});
+		std::error_code ec;
+		protocol::write_packet(*_output, ec, protocol::pingreq_header{});
+		return ec;
 	}
 	/**
 	 * Updates the keep alive state.
 	 *
 	 * @todo add timeout
 	 */
-	void update_state()
+	std::error_code update_state()
 	{
 		if (_next_keep_alive <= Clock::now()) {
-			puts("pinging");
-			ping();
+			return ping();
 		}
+
+		return {};
 	}
 	/**
 	 * Processes up to `available` bytes. Can be used in a non-blocking fashion.
@@ -128,7 +130,8 @@ public:
 	 * @param available the amount of bytes available to read
 	 * @return the amount of bytes processed; does not include publish packet payload
 	 */
-	std::size_t process_one(std::size_t available = std::numeric_limits<std::size_t>::max())
+	std::size_t process_one(std::error_code& ec,
+	                        std::size_t available = std::numeric_limits<std::size_t>::max())
 	{
 		if (const auto skip = _read_ignore < available ? _read_ignore : available) {
 			_input->ignore(skip);
@@ -141,7 +144,11 @@ public:
 			return 0;
 		} // read new packet
 		else if (_read_type == protocol::control_packet_type::reserved) {
-			_read_type = protocol::peek_type(*_input, _read_context);
+			_read_type = protocol::peek_type(*_input, ec, _read_context);
+
+			if (ec) {
+				return 0;
+			}
 		}
 
 		// process type
@@ -154,7 +161,7 @@ public:
 				_read_header.template emplace<index>();
 			}
 
-			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>())) {
+			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>())) {
 				_clear_read();
 			}
 
@@ -169,15 +176,13 @@ public:
 
 			protocol::variable_integer_type payload_size = 0;
 
-			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>(),
+			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>(),
 			                          payload_size)) {
 				_clear_read();
 
 				detail::constrained_streambuf buf{ *_input->rdbuf(), payload_size };
 				std::istream payload{ &buf };
-
 				on_publish(_read_header.template get<index>(), payload, payload_size);
-
 				_read_ignore  = buf.remaining();
 				const auto av = available - _read_context.available - payload_size + buf.remaining();
 
@@ -197,7 +202,7 @@ public:
 				_read_header.template emplace<index>();
 			}
 
-			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>())) {
+			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>())) {
 				_clear_read();
 				on_puback(_read_header.template get<index>());
 			}
@@ -211,7 +216,7 @@ public:
 				_read_header.template emplace<index>();
 			}
 
-			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>())) {
+			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>())) {
 				_clear_read();
 				on_pubrec(_read_header.template get<index>());
 			}
@@ -225,7 +230,7 @@ public:
 				_read_header.template emplace<index>();
 			}
 
-			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>())) {
+			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>())) {
 				_clear_read();
 				on_pubrel(_read_header.template get<index>());
 			}
@@ -239,7 +244,7 @@ public:
 				_read_header.template emplace<index>();
 			}
 
-			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>())) {
+			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>())) {
 				_clear_read();
 				on_pubcomp(_read_header.template get<index>());
 			}
@@ -253,7 +258,7 @@ public:
 				_read_header.template emplace<index>();
 			}
 
-			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>())) {
+			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>())) {
 				_clear_read();
 				on_suback(_read_header.template get<index>());
 			}
@@ -267,7 +272,7 @@ public:
 				_read_header.template emplace<index>();
 			}
 
-			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>())) {
+			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>())) {
 				_clear_read();
 				on_unsuback(_read_header.template get<index>());
 			}
@@ -281,14 +286,14 @@ public:
 				_read_header.template emplace<index>();
 			}
 
-			if (protocol::read_packet(*_input, _read_context, _read_header.template get<index>())) {
+			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>())) {
 				_clear_read();
 				on_pingresp(_read_header.template get<index>());
 			}
 
 			break;
 		}
-		default: throw protocol::protocol_error{ "invalid packet type" };
+		default: ec = errc::bad_packet_type;
 		}
 
 		if (_read_context.available != available) {
@@ -334,16 +339,22 @@ private:
 	        protocol::suback_header<ReturnCodeContainer>, protocol::unsuback_header,
 	        protocol::pingresp_header>
 	    _read_header;
+	/** describes when the next keep alive action is due */
 	typename Clock::time_point _next_keep_alive = Clock::time_point::max();
+	/** the keep alive timeout */
 	seconds _keep_alive;
 	BasicLockable _output_mutex;
+	/** the input stream */
 	Input* _input;
+	/** the output stream */
 	Output* _output;
 
+	/**
+	 * Clears the reading state for the next fresh read.
+	 */
 	void _clear_read() noexcept
 	{
 		_read_type = protocol::control_packet_type::reserved;
-
 		_read_context.clear();
 	}
 };

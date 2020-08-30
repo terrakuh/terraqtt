@@ -7,7 +7,7 @@ template<typename Lockable>
 class lock_guard
 {
 public:
-	lock_guard(Lockable& lock) noexcept : _lock(lock)
+	lock_guard(Lockable& lock) : _lock(lock)
 	{
 		lock.lock();
 	}
