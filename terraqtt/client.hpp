@@ -85,34 +85,35 @@ public:
 	}
 #if defined(__cpp_exceptions)
 	template<typename Topic, typename Payload>
-	void publish(const Topic& topic, const Payload& payload, qos qos = qos::at_most_once, bool retain = false)
+	void publish(const Topic& topic, const Payload& payload, std::uint16_t packet_id,
+	             qos qos = qos::at_most_once, bool retain = false)
 	{
 		std::error_code ec;
 
-		if (publish(ec, topic, payload, qos, retain), ec) {
+		if (publish(ec, topic, payload, packet_id, qos, retain), ec) {
 			throw exception{ ec };
 		}
 	}
 #endif
 	template<typename Topic, typename Payload>
-	void publish(std::error_code& ec, const Topic& topic, const Payload& payload, qos qos = qos::at_most_once,
-	             bool retain = false)
+	void publish(std::error_code& ec, const Topic& topic, const Payload& payload, std::uint16_t packet_id,
+	             qos qos = qos::at_most_once, bool retain = false)
 	{
 		protocol::publish_header<const Topic&> header{ topic };
 		header.qos               = qos;
 		header.retain            = retain;
-		header.packet_identifier = 1;
+		header.packet_identifier = packet_id;
 
 		lock_guard<BasicLockable> _{ _output_mutex };
 		protocol::write_packet(*_output, ec, header, payload);
 	}
 #if defined(__cpp_exceptions)
 	template<typename Topic>
-	void subscribe(std::initializer_list<Topic> topics)
+	void subscribe(std::initializer_list<Topic> topics, std::uint16_t packet_id)
 	{
 		std::error_code ec;
 
-		if (subscribe(ec, topics), ec) {
+		if (subscribe(ec, topics, packet_id), ec) {
 			throw exception{ ec };
 		}
 	}
@@ -120,14 +121,43 @@ public:
 	/**
 	 * Subscribes to one or more topics.
 	 *
+	 * @param ec[out] the error code, if any
 	 * @param topics the topics
-	 * @todo add packet identifier
+	 * @param packet_id the packet identifier
 	 */
 	template<typename Topic>
-	void subscribe(std::error_code& ec, std::initializer_list<Topic> topics)
+	void subscribe(std::error_code& ec, std::initializer_list<Topic> topics, std::uint16_t packet_id)
 	{
 		protocol::subscribe_header<const std::initializer_list<Topic>&> header{ topics };
-		header.packet_identifier = 1;
+		header.packet_identifier = packet_id;
+
+		lock_guard<BasicLockable> _{ _output_mutex };
+		protocol::write_packet(*_output, ec, header);
+	}
+
+#if defined(__cpp_exceptions)
+	template<typename Topic>
+	void unsubscribe(std::initializer_list<Topic> topics, std::uint16_t packet_id)
+	{
+		std::error_code ec;
+
+		if (unsubscribe(ec, topics, packet_id), ec) {
+			throw exception{ ec };
+		}
+	}
+#endif
+	/**
+	 * Unsubscribes from one or more topics.
+	 *
+	 * @param ec[out] the error code, if any
+	 * @param topics the topics
+	 * @param packet_id the packet identifier
+	 */
+	template<typename Topic>
+	void unsubscribe(std::error_code& ec, std::initializer_list<Topic> topics, std::uint16_t packet_id)
+	{
+		protocol::unsubscribe_header<const std::initializer_list<Topic>&> header{ topics };
+		header.packet_identifier = packet_id;
 
 		lock_guard<BasicLockable> _{ _output_mutex };
 		protocol::write_packet(*_output, ec, header);

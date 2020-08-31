@@ -53,10 +53,10 @@ try {
 	std::error_code ec;
 
 	client.connect(terraqtt::string_view{ "der.klient" }, true, terraqtt::seconds{ 3 });
-	client.publish(terraqtt::string_view{ "output" }, terraqtt::string_view{ "hello, world" },
+	client.publish(terraqtt::string_view{ "output" }, terraqtt::string_view{ "hello, world" }, 1,
 	               terraqtt::qos::at_least_once, true);
 	client.subscribe(
-	    { terraqtt::subscribe_topic<terraqtt::string_view>{ "input", terraqtt::qos::at_most_once } });
+	    { terraqtt::subscribe_topic<terraqtt::string_view>{ "input", terraqtt::qos::at_most_once } }, 1);
 	client.output()->flush();
 
 	while (stream) {
