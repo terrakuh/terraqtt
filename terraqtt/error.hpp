@@ -66,13 +66,17 @@ inline const std::error_category& terraqtt_category() noexcept
 	return category;
 }
 
-std::error_code make_error_code(errc ec) noexcept
+inline std::error_code make_error_code(errc ec) noexcept
 {
 	return { static_cast<int>(ec), terraqtt_category() };
 }
 
 } // namespace terraqtt
 
+namespace std {
+
 template<>
-struct std::is_error_code_enum<terraqtt::errc> : std::true_type
+struct is_error_code_enum<terraqtt::errc> : true_type
 {};
+
+} // namespace std

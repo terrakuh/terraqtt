@@ -1,7 +1,7 @@
 #ifndef TERRAQTT_PROTOCOL_READER_HPP_
 #define TERRAQTT_PROTOCOL_READER_HPP_
 
-#include "../error.h"
+#include "../error.hpp"
 #include "general.hpp"
 
 #include <utility>
@@ -111,7 +111,7 @@ inline bool read_blob(Input& input, std::error_code& ec, read_context& context, 
 {
 	std::uint16_t size = static_cast<std::uint16_t>(context.sequence_data[0]);
 
-	if (!size && !read_element(input, ec, context, size) || ec) {
+	if ((!size && !read_element(input, ec, context, size)) || ec) {
 		return false;
 	} else if (context.remaining_size < size) {
 		ec = errc::bad_remaining_size;

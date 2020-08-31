@@ -25,7 +25,7 @@ public:
 	typedef String string_type;
 	typedef ReturnCodeContainer return_code_container_type;
 
-	basic_client(Input* input, Output* output) noexcept : _output{ output }, _input{ input }
+	basic_client(Input* input, Output* output) noexcept : _input{ input }, _output{ output }
 	{}
 	virtual ~basic_client()
 	{

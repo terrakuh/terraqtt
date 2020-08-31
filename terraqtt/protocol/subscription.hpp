@@ -1,7 +1,6 @@
 #ifndef TERRAQTT_PROTOCOL_SUBSCRIPTION_HPP_
 #define TERRAQTT_PROTOCOL_SUBSCRIPTION_HPP_
 
-#include "../error.hpp"
 #include "general.hpp"
 #include "reader.hpp"
 #include "writer.hpp"
@@ -153,7 +152,7 @@ inline bool read_packet(Input& input, std::error_code& ec, read_context& context
 		context.remaining_size = static_cast<variable_integer_type>(remaining);
 	}
 
-	if (context.sequence == 2 && !read_element(input, ec, context, header.packet_identifier) || ec) {
+	if ((context.sequence == 2 && !read_element(input, ec, context, header.packet_identifier)) || ec) {
 		return false;
 	}
 

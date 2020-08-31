@@ -1,7 +1,6 @@
 #ifndef TERRAQTT_PROTOCOL_PING_HPP_
 #define TERRAQTT_PROTOCOL_PING_HPP_
 
-#include "../error.hpp"
 #include "general.hpp"
 #include "reader.hpp"
 #include "writer.hpp"

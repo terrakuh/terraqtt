@@ -21,6 +21,7 @@ if(TERRAQTT_BUILD_EXAMPLES)
 		Boost::boost
 		Boost::system
 		Threads::Threads)
+	# target_compile_options(playground PRIVATE -Wall -Wextra -pedantic -Werror -Wno-missing-field-initializers -Wno-unused-parameter)
 endif()
 
 # install

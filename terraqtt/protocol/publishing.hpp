@@ -1,7 +1,6 @@
 #ifndef TERRAQTT_PROTOCOL_PUBLISHING_HPP_
 #define TERRAQTT_PROTOCOL_PUBLISHING_HPP_
 
-#include "../error.hpp"
 #include "general.hpp"
 #include "reader.hpp"
 #include "writer.hpp"
@@ -102,7 +101,7 @@ inline bool read_packet(Input& input, std::error_code& ec, read_context& context
 		context.remaining_size = static_cast<variable_integer_type>(remaining);
 	}
 
-	if (context.sequence == 2 && !read_blob(input, ec, context, header.topic) || ec) {
+	if ((context.sequence == 2 && !read_blob(input, ec, context, header.topic)) || ec) {
 		return false;
 	}
 

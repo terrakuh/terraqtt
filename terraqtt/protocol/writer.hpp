@@ -1,7 +1,7 @@
 #ifndef TERRAQTT_PROTOCOL_WRITER_HPP_
 #define TERRAQTT_PROTOCOL_WRITER_HPP_
 
-#include "../error.h"
+#include "../error.hpp"
 #include "general.hpp"
 
 #include <algorithm>
@@ -64,15 +64,15 @@ inline byte* write_elements(byte* output, std::error_code& ec, variable_integer 
 
 		return output + 2;
 	} else if (v < 2097152) {
-		output[0] = static_cast<byte>(v >> 14 & 0x7f | 0x80);
-		output[1] = static_cast<byte>(v >> 7 & 0x7f | 0x80);
+		output[0] = static_cast<byte>((v >> 14 & 0x7f) | 0x80);
+		output[1] = static_cast<byte>((v >> 7 & 0x7f) | 0x80);
 		output[2] = static_cast<byte>(v & 0x7f);
 
 		return output + 3;
 	} else if (v < 268435456) {
-		output[0] = static_cast<byte>(v >> 21 & 0x7f | 0x80);
-		output[1] = static_cast<byte>(v >> 14 & 0x7f | 0x80);
-		output[2] = static_cast<byte>(v >> 7 & 0x7f | 0x80);
+		output[0] = static_cast<byte>((v >> 21 & 0x7f) | 0x80);
+		output[1] = static_cast<byte>((v >> 14 & 0x7f) | 0x80);
+		output[2] = static_cast<byte>((v >> 7 & 0x7f) | 0x80);
 		output[3] = static_cast<byte>(v & 0x7f);
 
 		return output + 4;
