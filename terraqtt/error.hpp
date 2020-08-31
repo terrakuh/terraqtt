@@ -35,6 +35,7 @@ enum class errc
 	empty_client_identifier,
 
 	bad_variant_cast,
+	connection_timed_out,
 };
 
 #if defined(__cpp_exceptions)

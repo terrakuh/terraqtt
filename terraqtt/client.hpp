@@ -2,6 +2,7 @@
 #define TERRAQTT_CLIENT_HPP_
 
 #include "detail/constrained_streambuf.hpp"
+#include "keep_aliver.hpp"
 #include "lock_guard.hpp"
 #include "protocol/connection.hpp"
 #include "protocol/ping.hpp"
@@ -10,14 +11,11 @@
 #include "protocol/subscription.hpp"
 #include "variant.hpp"
 
-#include <chrono>
 #include <initializer_list>
 #include <limits>
 #include <ratio>
 
 namespace terraqtt {
-
-typedef std::chrono::duration<std::uint16_t> seconds;
 
 template<typename Input, typename Output, typename String, typename ReturnCodeContainer,
          typename BasicLockable, typename Clock>
@@ -61,7 +59,7 @@ public:
 		protocol::connect_header<const Identifier&, const String&, const String&> header{ identifier };
 		header.clean_session = clean_session;
 		header.keep_alive    = keep_alive.count();
-		_keep_alive          = keep_alive;
+		_keep_alive          = { keep_alive };
 
 		lock_guard<BasicLockable> _{ _output_mutex };
 		protocol::write_packet(*_output, ec, header);
@@ -169,8 +167,12 @@ public:
 	 */
 	void update_state(std::error_code& ec)
 	{
-		if (_next_keep_alive <= Clock::now()) {
-			ping(ec);
+		if (_keep_alive.needs_keeping_alive()) {
+			if (ping(ec), !ec) {
+				_keep_alive.start_reset_timeout();
+			}
+		} else if (_keep_alive.reset_timeout()) {
+			ec = errc::connection_timed_out;
 		}
 	}
 #if defined(__cpp_exceptions)
@@ -223,11 +225,6 @@ public:
 		default: ec = errc::bad_packet_type; break;
 		}
 
-		// reset keep alive timeout
-		if (!ec && _read_context.available != available) {
-			_next_keep_alive = Clock::now() + _keep_alive;
-		}
-
 		return available - _read_context.available;
 	}
 	Input* input() noexcept
@@ -241,12 +238,16 @@ public:
 
 protected:
 	virtual void on_connack(protocol::connack_header& header)
-	{}
+	{
+		_keep_alive.reset();
+	}
 	virtual void on_publish(protocol::publish_header<string_type>& header, std::istream& payload,
 	                        std::size_t payload_size)
 	{}
 	virtual void on_puback(protocol::puback_header& header)
-	{}
+	{
+		_keep_alive.reset();
+	}
 	virtual void on_pubrec(protocol::pubrec_header& header)
 	{}
 	virtual void on_pubrel(protocol::pubrel_header& header)
@@ -254,11 +255,17 @@ protected:
 	virtual void on_pubcomp(protocol::pubcomp_header& header)
 	{}
 	virtual void on_suback(protocol::suback_header<return_code_container_type>& header)
-	{}
+	{
+		_keep_alive.reset();
+	}
 	virtual void on_unsuback(protocol::unsuback_header& header)
-	{}
+	{
+		_keep_alive.reset();
+	}
 	virtual void on_pingresp(protocol::pingresp_header& header)
-	{}
+	{
+		_keep_alive.reset();
+	}
 
 private:
 	std::size_t _read_ignore = 0;
@@ -269,10 +276,8 @@ private:
 	        protocol::suback_header<ReturnCodeContainer>, protocol::unsuback_header,
 	        protocol::pingresp_header>
 	    _read_header;
-	/** describes when the next keep alive action is due */
-	typename Clock::time_point _next_keep_alive = Clock::time_point::max();
 	/** the keep alive timeout */
-	seconds _keep_alive;
+	keep_aliver<Clock> _keep_alive;
 	BasicLockable _output_mutex;
 	/** the input stream */
 	Input* _input;

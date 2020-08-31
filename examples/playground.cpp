@@ -52,7 +52,7 @@ try {
 	my_client client{ &stream, &stream };
 	std::error_code ec;
 
-	client.connect(terraqtt::string_view{ "der.klient" }, true, terraqtt::seconds{ 10 });
+	client.connect(terraqtt::string_view{ "der.klient" }, true, terraqtt::seconds{ 3 });
 	client.publish(terraqtt::string_view{ "output" }, terraqtt::string_view{ "hello, world" },
 	               terraqtt::qos::at_least_once, true);
 	client.subscribe(
