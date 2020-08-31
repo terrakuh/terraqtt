@@ -85,7 +85,7 @@ public:
 	}
 #if defined(__cpp_exceptions)
 	template<typename Topic, typename Payload>
-	void publish(const Topic& topic, const Payload& payload, std::uint16_t packet_id,
+	void publish(const Topic& topic, const Payload& payload, std::uint16_t packet_id = 0,
 	             qos qos = qos::at_most_once, bool retain = false)
 	{
 		std::error_code ec;
@@ -95,8 +95,20 @@ public:
 		}
 	}
 #endif
+	/**
+	 * Publishes the payload to the topic.
+	 *
+	 * @tparam Topic the topic type; must meet the requriements of a `Container`
+	 * @tparam Paylaod the payload; must meet the requirements of a `Container`
+	 * @param ec[out] the error code, if any
+	 * @param topic the topic
+	 * @param payload the payload
+	 * @param packet_id the packet identifier; must be non `0` if `qos != qos::at_most_once`
+	 * @param qos the QoS
+	 * @param retain whether the payload should be stored on the broker
+	 */
 	template<typename Topic, typename Payload>
-	void publish(std::error_code& ec, const Topic& topic, const Payload& payload, std::uint16_t packet_id,
+	void publish(std::error_code& ec, const Topic& topic, const Payload& payload, std::uint16_t packet_id = 0,
 	             qos qos = qos::at_most_once, bool retain = false)
 	{
 		protocol::publish_header<const Topic&> header{ topic };
@@ -174,6 +186,8 @@ public:
 #endif
 	/**
 	 * Sends a ping request to broker.
+	 * 
+	 * @param ec[out] the error code, if any
 	 */
 	void ping(std::error_code& ec)
 	{
@@ -193,7 +207,7 @@ public:
 	/**
 	 * Updates the keep alive state.
 	 *
-	 * @todo add timeout
+	 * @param ec[out] the error code, if any
 	 */
 	void update_state(std::error_code& ec)
 	{
@@ -216,6 +230,7 @@ public:
 	/**
 	 * Processes up to `available` bytes. Can be used in a non-blocking fashion.
 	 *
+	 * @param ec[out] the error code, if any
 	 * @param available the amount of bytes available to read
 	 * @return the amount of bytes processed; does not include publish packet payload
 	 */
