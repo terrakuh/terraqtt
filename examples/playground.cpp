@@ -42,7 +42,7 @@ protected:
 };
 
 int main()
-{
+try {
 	std::signal(SIGINT, &handler);
 
 	asio::ip::tcp::iostream stream;
@@ -50,6 +50,7 @@ int main()
 	stream.connect(asio::ip::tcp::endpoint{ asio::ip::address::from_string("127.0.0.1"), 1883 });
 
 	my_client client{ &stream, &stream };
+	std::error_code ec;
 
 	client.connect(terraqtt::string_view{ "der.klient" }, true, terraqtt::seconds{ 10 });
 	client.publish(terraqtt::string_view{ "output" }, terraqtt::string_view{ "hello, world" },
@@ -82,4 +83,7 @@ int main()
 	}
 
 	std::cerr << "stream broken\n";
+} catch (const terraqtt::exception& e) {
+	std::cerr << "exception caught (" << e.code() << "): " << e.what() << '\n';
+	return 1;
 }

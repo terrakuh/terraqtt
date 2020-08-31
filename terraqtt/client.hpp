@@ -31,8 +31,20 @@ public:
 	{}
 	virtual ~basic_client()
 	{
-		disconnect();
+		std::error_code ec;
+		disconnect(ec);
 	}
+#if defined(__cpp_exceptions)
+	template<typename Identifier>
+	void connect(const Identifier& identifier, bool clean_session = true, seconds keep_alive = seconds{ 0 })
+	{
+		std::error_code ec;
+
+		if (connect(ec, identifier, clean_session, keep_alive), ec) {
+			throw exception{ ec };
+		}
+	}
+#endif
 	/**
 	 * Connects to the MQTT broker.
 	 *
@@ -43,8 +55,8 @@ public:
 	 * @todo add will and authentication
 	 */
 	template<typename Identifier>
-	std::error_code connect(const Identifier& identifier, bool clean_session = true,
-	                        seconds keep_alive = seconds{ 0 })
+	void connect(std::error_code& ec, const Identifier& identifier, bool clean_session = true,
+	             seconds keep_alive = seconds{ 0 })
 	{
 		protocol::connect_header<const Identifier&, const String&, const String&> header{ identifier };
 		header.clean_session = clean_session;
@@ -52,27 +64,41 @@ public:
 		_keep_alive          = keep_alive;
 
 		lock_guard<BasicLockable> _{ _output_mutex };
-		std::error_code ec;
 		protocol::write_packet(*_output, ec, header);
-		return ec;
 	}
-	std::error_code disconnect()
+#if defined(__cpp_exceptions)
+	void disconnect()
+	{
+		std::error_code ec;
+
+		if (disconnect(ec), ec) {
+			throw exception{ ec };
+		}
+	}
+#endif
+	void disconnect(std::error_code& ec)
 	{
 		if (_output) {
 			lock_guard<BasicLockable> _{ _output_mutex };
-			std::error_code ec;
 			protocol::write_packet(*_output, ec, protocol::disconnect_header{});
 
 			_output = nullptr;
-
-			return ec;
 		}
-
-		return {};
 	}
+#if defined(__cpp_exceptions)
 	template<typename Topic, typename Payload>
-	std::error_code publish(const Topic& topic, const Payload& payload, qos qos = qos::at_most_once,
-	                        bool retain = false)
+	void publish(const Topic& topic, const Payload& payload, qos qos = qos::at_most_once, bool retain = false)
+	{
+		std::error_code ec;
+
+		if (publish(ec, topic, payload, qos, retain), ec) {
+			throw exception{ ec };
+		}
+	}
+#endif
+	template<typename Topic, typename Payload>
+	void publish(std::error_code& ec, const Topic& topic, const Payload& payload, qos qos = qos::at_most_once,
+	             bool retain = false)
 	{
 		protocol::publish_header<const Topic&> header{ topic };
 		header.qos               = qos;
@@ -80,10 +106,19 @@ public:
 		header.packet_identifier = 1;
 
 		lock_guard<BasicLockable> _{ _output_mutex };
-		std::error_code ec;
 		protocol::write_packet(*_output, ec, header, payload);
-		return ec;
 	}
+#if defined(__cpp_exceptions)
+	template<typename Topic>
+	void subscribe(std::initializer_list<Topic> topics)
+	{
+		std::error_code ec;
+
+		if (subscribe(ec, topics), ec) {
+			throw exception{ ec };
+		}
+	}
+#endif
 	/**
 	 * Subscribes to one or more topics.
 	 *
@@ -91,39 +126,61 @@ public:
 	 * @todo add packet identifier
 	 */
 	template<typename Topic>
-	std::error_code subscribe(std::initializer_list<Topic> topics)
+	void subscribe(std::error_code& ec, std::initializer_list<Topic> topics)
 	{
 		protocol::subscribe_header<const std::initializer_list<Topic>&> header{ topics };
 		header.packet_identifier = 1;
 
 		lock_guard<BasicLockable> _{ _output_mutex };
-		std::error_code ec;
 		protocol::write_packet(*_output, ec, header);
-		return ec;
 	}
+#if defined(__cpp_exceptions)
+	void ping()
+	{
+		std::error_code ec;
+
+		if (ping(ec), ec) {
+			throw exception{ ec };
+		}
+	}
+#endif
 	/**
 	 * Sends a ping request to broker.
 	 */
-	std::error_code ping()
+	void ping(std::error_code& ec)
 	{
 		lock_guard<BasicLockable> _{ _output_mutex };
-		std::error_code ec;
 		protocol::write_packet(*_output, ec, protocol::pingreq_header{});
-		return ec;
 	}
+#if defined(__cpp_exceptions)
+	void update_state()
+	{
+		std::error_code ec;
+
+		if (update_state(ec), ec) {
+			throw exception{ ec };
+		}
+	}
+#endif
 	/**
 	 * Updates the keep alive state.
 	 *
 	 * @todo add timeout
 	 */
-	std::error_code update_state()
+	void update_state(std::error_code& ec)
 	{
 		if (_next_keep_alive <= Clock::now()) {
-			return ping();
+			ping(ec);
 		}
-
-		return {};
 	}
+#if defined(__cpp_exceptions)
+	std::size_t process_one(std::size_t available = std::numeric_limits<std::size_t>::max())
+	{
+		std::error_code ec;
+		const auto processed = process_one(ec, available);
+		return ec ? throw exception{ ec } : processed;
+	}
+#endif
 	/**
 	 * Processes up to `available` bytes. Can be used in a non-blocking fashion.
 	 *
@@ -154,149 +211,20 @@ public:
 		// process type
 		switch (_read_type) {
 		case protocol::control_packet_type::reserved: break;
-		case protocol::control_packet_type::connack: {
-			constexpr auto index = 0;
-
-			if (!_read_context.sequence) {
-				_read_header.template emplace<index>();
-			}
-
-			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>())) {
-				_clear_read();
-			}
-
-			break;
-		}
-		case protocol::control_packet_type::publish: {
-			constexpr auto index = 1;
-
-			if (!_read_context.sequence) {
-				_read_header.template emplace<index>();
-			}
-
-			protocol::variable_integer_type payload_size = 0;
-
-			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>(),
-			                          payload_size)) {
-				_clear_read();
-
-				detail::constrained_streambuf buf{ *_input->rdbuf(), payload_size };
-				std::istream payload{ &buf };
-				on_publish(_read_header.template get<index>(), payload, payload_size);
-				_read_ignore  = buf.remaining();
-				const auto av = available - _read_context.available - payload_size + buf.remaining();
-
-				if (const auto skip = _read_ignore < av ? _read_ignore : av) {
-					_input->ignore(skip);
-
-					_read_ignore -= skip;
-				}
-			}
-
-			break;
-		}
-		case protocol::control_packet_type::puback: {
-			constexpr auto index = 2;
-
-			if (!_read_context.sequence) {
-				_read_header.template emplace<index>();
-			}
-
-			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>())) {
-				_clear_read();
-				on_puback(_read_header.template get<index>());
-			}
-
-			break;
-		}
-		case protocol::control_packet_type::pubrec: {
-			constexpr auto index = 3;
-
-			if (!_read_context.sequence) {
-				_read_header.template emplace<index>();
-			}
-
-			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>())) {
-				_clear_read();
-				on_pubrec(_read_header.template get<index>());
-			}
-
-			break;
-		}
-		case protocol::control_packet_type::pubrel: {
-			constexpr auto index = 4;
-
-			if (!_read_context.sequence) {
-				_read_header.template emplace<index>();
-			}
-
-			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>())) {
-				_clear_read();
-				on_pubrel(_read_header.template get<index>());
-			}
-
-			break;
-		}
-		case protocol::control_packet_type::pubcomp: {
-			constexpr auto index = 5;
-
-			if (!_read_context.sequence) {
-				_read_header.template emplace<index>();
-			}
-
-			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>())) {
-				_clear_read();
-				on_pubcomp(_read_header.template get<index>());
-			}
-
-			break;
-		}
-		case protocol::control_packet_type::suback: {
-			constexpr auto index = 6;
-
-			if (!_read_context.sequence) {
-				_read_header.template emplace<index>();
-			}
-
-			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>())) {
-				_clear_read();
-				on_suback(_read_header.template get<index>());
-			}
-
-			break;
-		}
-		case protocol::control_packet_type::unsuback: {
-			constexpr auto index = 7;
-
-			if (!_read_context.sequence) {
-				_read_header.template emplace<index>();
-			}
-
-			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>())) {
-				_clear_read();
-				on_unsuback(_read_header.template get<index>());
-			}
-
-			break;
-		}
-		case protocol::control_packet_type::pingresp: {
-			constexpr auto index = 8;
-
-			if (!_read_context.sequence) {
-				_read_header.template emplace<index>();
-			}
-
-			if (protocol::read_packet(*_input, ec, _read_context, _read_header.template get<index>())) {
-				_clear_read();
-				on_pingresp(_read_header.template get<index>());
-			}
-
-			break;
-		}
-		default: ec = errc::bad_packet_type;
+		case protocol::control_packet_type::connack: _handle_connack(ec); break;
+		case protocol::control_packet_type::publish: _handle_publish(ec); break;
+		case protocol::control_packet_type::puback: _handle_puback(ec); break;
+		case protocol::control_packet_type::pubrec: _handle_pubrec(ec); break;
+		case protocol::control_packet_type::pubrel: _handle_pubrel(ec); break;
+		case protocol::control_packet_type::pubcomp: _handle_pubcomp(ec); break;
+		case protocol::control_packet_type::suback: _handle_suback(ec); break;
+		case protocol::control_packet_type::unsuback: _handle_unsuback(ec); break;
+		case protocol::control_packet_type::pingresp: _handle_pingresp(ec); break;
+		default: ec = errc::bad_packet_type; break;
 		}
 
-		if (_read_context.available != available) {
+		// reset keep alive timeout
+		if (!ec && _read_context.available != available) {
 			_next_keep_alive = Clock::now() + _keep_alive;
 		}
 
@@ -312,6 +240,8 @@ public:
 	}
 
 protected:
+	virtual void on_connack(protocol::connack_header& header)
+	{}
 	virtual void on_publish(protocol::publish_header<string_type>& header, std::istream& payload,
 	                        std::size_t payload_size)
 	{}
@@ -356,6 +286,141 @@ private:
 	{
 		_read_type = protocol::control_packet_type::reserved;
 		_read_context.clear();
+	}
+	void _handle_connack(std::error_code& ec)
+	{
+		constexpr auto index = 0;
+
+		if (!_read_context.sequence) {
+			_read_header.template emplace<index>();
+		}
+
+		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
+			_clear_read();
+			on_connack(*_read_header.template get<index>(ec));
+		}
+	}
+	void _handle_publish(std::error_code& ec)
+	{
+		constexpr auto index = 1;
+
+		if (!_read_context.sequence) {
+			_read_header.template emplace<index>();
+		}
+
+		protocol::variable_integer_type payload_size = 0;
+		const auto total_available                   = _read_context.available;
+
+		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec),
+		                          payload_size) &&
+		    !ec) {
+			_clear_read();
+
+			detail::constrained_streambuf buf{ *_input->rdbuf(), payload_size };
+			std::istream payload{ &buf };
+			on_publish(*_read_header.template get<index>(ec), payload, payload_size);
+
+			// ignore remaining payload
+			_read_ignore         = buf.remaining();
+			const auto available = total_available - _read_context.available - payload_size + buf.remaining();
+
+			if (const auto skip = _read_ignore < available ? _read_ignore : available) {
+				_input->ignore(skip);
+
+				_read_ignore -= skip;
+			}
+		}
+	}
+	void _handle_puback(std::error_code& ec)
+	{
+		constexpr auto index = 2;
+
+		if (!_read_context.sequence) {
+			_read_header.template emplace<index>();
+		}
+
+		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
+			_clear_read();
+			on_puback(*_read_header.template get<index>(ec));
+		}
+	}
+	void _handle_pubrec(std::error_code& ec)
+	{
+		constexpr auto index = 3;
+
+		if (!_read_context.sequence) {
+			_read_header.template emplace<index>();
+		}
+
+		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
+			_clear_read();
+			on_pubrec(*_read_header.template get<index>(ec));
+		}
+	}
+	void _handle_pubrel(std::error_code& ec)
+	{
+		constexpr auto index = 4;
+
+		if (!_read_context.sequence) {
+			_read_header.template emplace<index>();
+		}
+
+		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
+			_clear_read();
+			on_pubrel(*_read_header.template get<index>(ec));
+		}
+	}
+	void _handle_pubcomp(std::error_code& ec)
+	{
+		constexpr auto index = 5;
+
+		if (!_read_context.sequence) {
+			_read_header.template emplace<index>();
+		}
+
+		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
+			_clear_read();
+			on_pubcomp(*_read_header.template get<index>(ec));
+		}
+	}
+	void _handle_suback(std::error_code& ec)
+	{
+		constexpr auto index = 6;
+
+		if (!_read_context.sequence) {
+			_read_header.template emplace<index>();
+		}
+
+		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
+			_clear_read();
+			on_suback(*_read_header.template get<index>(ec));
+		}
+	}
+	void _handle_unsuback(std::error_code& ec)
+	{
+		constexpr auto index = 7;
+
+		if (!_read_context.sequence) {
+			_read_header.template emplace<index>();
+		}
+
+		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
+			_clear_read();
+			on_unsuback(*_read_header.template get<index>(ec));
+		}
+	}
+	void _handle_pingresp(std::error_code& ec)
+	{
+		constexpr auto index = 8;
+
+		if (!_read_context.sequence) {
+			_read_header.template emplace<index>();
+		}
+
+		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
+			_clear_read();
+			on_pingresp(*_read_header.template get<index>(ec));
+		}
 	}
 };
 

@@ -32,7 +32,9 @@ enum class errc
 	bad_qos,
 	bad_will,
 	bad_username_password,
-	empty_client_identifier
+	empty_client_identifier,
+
+	bad_variant_cast,
 };
 
 #if defined(__cpp_exceptions)

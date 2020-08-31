@@ -1,7 +1,8 @@
 #ifndef TERRAQTT_VARIANT_HPP_
 #define TERRAQTT_VARIANT_HPP_
 
-#include <stdexcept>
+#include "error.hpp"
+
 #include <type_traits>
 #include <utility>
 
@@ -48,26 +49,24 @@ template<typename... Types>
 class variant
 {
 public:
-	variant()
-	{
-		_index = sizeof...(Types);
-	}
+	constexpr static auto npos = sizeof...(Types);
+
 	~variant()
 	{
 		clear();
 	}
 	void clear() noexcept
 	{
-		if (_index < sizeof...(Types)) {
+		if (_index < npos) {
 			_clear<0, Types...>();
 
-			_index = sizeof...(Types);
+			_index = npos;
 		}
 	}
 	template<std::size_t Index, typename... Args>
 	void emplace(Args&&... args)
 	{
-		static_assert(Index < sizeof...(Types), "type index out of range");
+		static_assert(Index < npos, "type index out of range");
 
 		clear();
 
@@ -76,13 +75,14 @@ public:
 		_index = Index;
 	}
 	template<std::size_t Index>
-	typename detail::select_type<Index, Types...>::type& get()
+	typename detail::select_type<Index, Types...>::type* get(std::error_code& ec) noexcept
 	{
-		if (_index != Index) {
-			throw std::bad_cast{};
+		if (empty() || _index != Index) {
+			ec = errc::bad_variant_cast;
+			return nullptr;
 		}
 
-		return *reinterpret_cast<typename detail::select_type<Index, Types...>::type*>(&_data);
+		return reinterpret_cast<typename detail::select_type<Index, Types...>::type*>(&_data);
 	}
 	std::size_t index() const noexcept
 	{
@@ -90,13 +90,13 @@ public:
 	}
 	bool empty() const noexcept
 	{
-		return _index >= sizeof...(Types);
+		return _index >= npos;
 	}
 
 private:
 	typename std::aligned_storage<detail::max_size_of<Types...>(), detail::max_align_of<Types...>()>::type
 	    _data;
-	std::size_t _index;
+	std::size_t _index = npos;
 
 	template<std::size_t Index>
 	void _clear() noexcept
