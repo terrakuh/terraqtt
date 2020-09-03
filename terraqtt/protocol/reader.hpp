@@ -55,7 +55,6 @@ inline bool read_element(Input& input, std::error_code& ec, read_context& contex
 	}
 
 	typename Input::char_type buffer[2];
-
 	input.read(buffer, sizeof(buffer));
 
 	if (!input) {
@@ -122,6 +121,11 @@ inline bool read_blob(Input& input, std::error_code& ec, read_context& context, 
 
 	for (; context.sequence_data[0] && context.available;
 	     --context.sequence_data[0], --context.available, --context.remaining_size) {
+		if (blob.size() >= blob.max_size()) {
+			ec = std::make_error_code(std::errc::not_enough_memory);
+			return false;
+		}
+
 		const auto c = input.get();
 
 		if (!input) {

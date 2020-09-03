@@ -2,7 +2,6 @@
 #define TERRAQTT_STATIC_CONTAINER_HPP_
 
 #include <cstddef>
-#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
@@ -14,12 +13,8 @@ class static_container
 public:
 	typedef Type value_type;
 
-	void resize(std::size_t size)
+	void resize(std::size_t size) noexcept(std::is_nothrow_default_constructible<Type>::value)
 	{
-		if (size > max_size()) {
-			throw std::bad_alloc{};
-		}
-
 		while (size > _size) {
 			push_back(Type{});
 		}
@@ -30,26 +25,14 @@ public:
 	}
 	void push_back(const Type& value)
 	{
-		if (size() == max_size()) {
-			throw std::out_of_range{ "container is full" };
-		}
-
 		new (&_data[_size++]) Type{ value };
 	}
-	void push_back(Type&& value)
+	void push_back(Type&& value) noexcept(std::is_nothrow_move_constructible<Type>::value)
 	{
-		if (size() == max_size()) {
-			throw std::out_of_range{ "container is full" };
-		}
-
 		new (_data + _size++) Type{ std::move(value) };
 	}
-	void pop_back()
+	void pop_back() noexcept
 	{
-		if (empty()) {
-			throw std::out_of_range{ "container is empty" };
-		}
-
 		reinterpret_cast<Type*>(_data + --_size)->~Type();
 	}
 	Type* begin() noexcept
