@@ -2,6 +2,10 @@
 
 An open source, header only and fully templated MQTT Library for C++11.
 
+Supported protocols:
+
+- MQTT v3.1.1
+
 ## Example
 
 ```cpp
