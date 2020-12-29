@@ -8,15 +8,15 @@
 namespace terraqtt {
 
 template<typename String>
-struct subscribe_topic
+struct Subscribe_topic
 {
 	String filter;
-	enum qos qos;
+	QOS qos;
 };
 
 namespace protocol {
 
-enum class suback_return_code
+enum class Suback_return_code
 {
 	success0 = 0x00,
 	success1 = 0x01,
@@ -27,37 +27,37 @@ enum class suback_return_code
 /**
  * @tparam TopicContainer must hold the type subscribe_topic
  */
-template<typename TopicContainer>
-struct subscribe_header
+template<typename Topic_container>
+struct Subscribe_header
 {
-	TopicContainer topics;
+	Topic_container topics;
 	std::uint16_t packet_identifier;
 };
 
 /**
  * @tparam ReturnCodeContainer must hold the type suback_return_code
  */
-template<typename ReturnCodeContainer>
-struct suback_header
+template<typename Return_code_container>
+struct Suback_header
 {
-	static_assert(std::is_same<typename ReturnCodeContainer::value_type, suback_return_code>::value,
-	              "ReturnCodeContainer must return return_code");
+	static_assert(std::is_same<typename Return_code_container::Value_type, Suback_return_code>::value,
+	              "Return_code_container must return return_code");
 
-	ReturnCodeContainer return_codes;
+	Return_code_container return_codes;
 	std::uint16_t packet_identifier;
 };
 
 /**
  * @tparam TopicContainer must hold Strings
  */
-template<typename TopicContainer>
-struct unsubscribe_header
+template<typename Topic_container>
+struct Unsubscribe_header
 {
-	TopicContainer topics;
+	Topic_container topics;
 	std::uint16_t packet_identifier;
 };
 
-struct unsuback_header
+struct Unsuback_header
 {
 	std::uint16_t packet_identifier;
 };
@@ -70,22 +70,20 @@ struct unsuback_header
  * @param header the subscribe header
  * @tparam TopicContainer must meet the requirements of *Container*
  */
-template<typename Output, typename TopicContainer>
-inline void write_packet(Output& output, std::error_code& ec, const subscribe_header<TopicContainer>& header)
+template<typename Output, typename Topic_container>
+inline void write_packet(Output& output, std::error_code& ec, const Subscribe_header<Topic_container>& header)
 {
-	typename std::underlying_type<variable_integer>::type remaining = 2;
-
+	typename std::underlying_type<Variable_integer>::type remaining = 2;
 	for (const auto& i : header.topics) {
 		if (!protected_add(remaining, 3u) || !protected_add(remaining, i.filter.size())) {
-			ec = errc::payload_too_large;
+			ec = Error::payload_too_large;
 			return;
 		}
 	}
 
 	write_elements(output, ec,
-	               static_cast<byte>(static_cast<int>(control_packet_type::subscribe) << 4 | 0x02),
-	               static_cast<variable_integer>(remaining), header.packet_identifier);
-
+	               static_cast<Byte>(static_cast<int>(Control_packet_type::subscribe) << 4 | 0x02),
+	               static_cast<Variable_integer>(remaining), header.packet_identifier);
 	if (ec) {
 		return;
 	}
@@ -95,7 +93,7 @@ inline void write_packet(Output& output, std::error_code& ec, const subscribe_he
 			return;
 		}
 
-		if (write_elements(output, ec, static_cast<byte>(i.qos)), ec) {
+		if (write_elements(output, ec, static_cast<Byte>(i.qos)), ec) {
 			return;
 		}
 	}
@@ -109,47 +107,43 @@ inline void write_packet(Output& output, std::error_code& ec, const subscribe_he
  * @param header the suback header
  * @tparam ReturnCodeContainer must meet the requirements of *Container*
  */
-template<typename Output, typename ReturnCodeContainer>
+template<typename Output, typename Return_code_container>
 inline void write_packet(Output& output, std::error_code& ec,
-                         const suback_header<ReturnCodeContainer>& header)
+                         const Suback_header<Return_code_container>& header)
 {
-	write_elements(output, ec, static_cast<byte>(static_cast<int>(control_packet_type::suback) << 4),
-	               static_cast<variable_integer>(2 + header.return_codes.size()), header.packet_identifier);
-
+	write_elements(output, ec, static_cast<Byte>(static_cast<int>(Control_packet_type::suback) << 4),
+	               static_cast<Variable_integer>(2 + header.return_codes.size()), header.packet_identifier);
 	if (ec) {
 		return;
 	}
 
 	for (auto i : header.return_codes) {
-		if (write_elements(output, ec, static_cast<byte>(i)), ec) {
+		if (write_elements(output, ec, static_cast<Byte>(i)), ec) {
 			return;
 		}
 	}
 }
 
-template<typename Input, typename ReturnCodeContainer>
-inline bool read_packet(Input& input, std::error_code& ec, read_context& context,
-                        suback_header<ReturnCodeContainer>& header)
+template<typename Input, typename Return_code_container>
+inline bool read_packet(Input& input, std::error_code& ec, Read_context& context,
+                        Suback_header<Return_code_container>& header)
 {
 	if (context.sequence == 0) {
-		byte type;
-
+		Byte type;
 		if (!read_element(input, ec, context, type) || ec) {
 			return false;
-		} else if (type != static_cast<byte>(static_cast<int>(control_packet_type::suback) << 4)) {
-			ec = errc::bad_suback_flags;
+		} else if (type != static_cast<Byte>(static_cast<int>(Control_packet_type::suback) << 4)) {
+			ec = Error::bad_suback_flags;
 			return false;
 		}
 	}
 
 	if (context.sequence == 1) {
-		variable_integer remaining;
-
+		Variable_integer remaining;
 		if (!read_element(input, ec, context, remaining) || ec) {
 			return false;
 		}
-
-		context.remaining_size = static_cast<variable_integer_type>(remaining);
+		context.remaining_size = static_cast<Variable_integer_type>(remaining);
 	}
 
 	if ((context.sequence == 2 && !read_element(input, ec, context, header.packet_identifier)) || ec) {
@@ -157,15 +151,12 @@ inline bool read_packet(Input& input, std::error_code& ec, read_context& context
 	}
 
 	while (context.remaining_size) {
-		byte rc;
-
+		Byte rc;
 		if (!read_element(input, ec, context, rc) || ec) {
 			return false;
 		}
-
-		header.return_codes.push_back(static_cast<suback_return_code>(rc));
+		header.return_codes.push_back(static_cast<Suback_return_code>(rc));
 	}
-
 	return true;
 }
 
@@ -177,23 +168,21 @@ inline bool read_packet(Input& input, std::error_code& ec, read_context& context
  * @param header the unsubscribe header
  * @tparam TopicContainer must meet the requirements of *Container*
  */
-template<typename Output, typename TopicContainer>
+template<typename Output, typename Topic_container>
 inline void write_packet(Output& output, std::error_code& ec,
-                         const unsubscribe_header<TopicContainer>& header)
+                         const Unsubscribe_header<Topic_container>& header)
 {
-	typename std::underlying_type<variable_integer>::type remaining = 2;
-
+	typename std::underlying_type<Variable_integer>::type remaining = 2;
 	for (const auto& i : header.topics) {
 		if (!protected_add(remaining, 2u) || !protected_add(remaining, i.size())) {
-			ec = errc::payload_too_large;
+			ec = Error::payload_too_large;
 			return;
 		}
 	}
 
 	write_elements(output, ec,
-	               static_cast<byte>(static_cast<int>(control_packet_type::unsubscribe) << 4 | 0x02),
-	               static_cast<variable_integer>(remaining), header.packet_identifier);
-
+	               static_cast<Byte>(static_cast<int>(Control_packet_type::unsubscribe) << 4 | 0x02),
+	               static_cast<Variable_integer>(remaining), header.packet_identifier);
 	if (!ec) {
 		for (const auto& i : header.topics) {
 			if (write_blob<true>(output, ec, i), ec) {
@@ -204,26 +193,24 @@ inline void write_packet(Output& output, std::error_code& ec,
 }
 
 template<typename Input>
-inline bool read_packet(Input& input, std::error_code& ec, read_context& context, unsuback_header& header)
+inline bool read_packet(Input& input, std::error_code& ec, Read_context& context, Unsuback_header& header)
 {
 	if (context.sequence == 0) {
-		byte type;
-
+		Byte type;
 		if (!read_element(input, ec, context, type) || ec) {
 			return false;
-		} else if (type != static_cast<byte>(static_cast<int>(control_packet_type::unsuback) << 4)) {
-			ec = errc::bad_unsuback_flags;
+		} else if (type != static_cast<Byte>(static_cast<int>(Control_packet_type::unsuback) << 4)) {
+			ec = Error::bad_unsuback_flags;
 			return false;
 		}
 	}
 
 	if (context.sequence == 1) {
-		variable_integer remaining;
-
+		Variable_integer remaining;
 		if (!read_element(input, ec, context, remaining) || ec) {
 			return false;
-		} else if (remaining != static_cast<variable_integer>(2)) {
-			ec = errc::bad_unsuback_payload;
+		} else if (remaining != static_cast<Variable_integer>(2)) {
+			ec = Error::bad_unsuback_payload;
 			return false;
 		}
 	}

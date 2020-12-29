@@ -10,7 +10,7 @@
 
 namespace terraqtt {
 
-enum class qos
+enum class QOS
 {
 	at_most_once,
 	at_least_once,
@@ -19,14 +19,14 @@ enum class qos
 
 namespace protocol {
 
-typedef std::uint8_t byte;
-typedef std::uint32_t variable_integer_type;
+typedef std::uint8_t Byte;
+typedef std::uint32_t Variable_integer_type;
 
-enum class variable_integer : variable_integer_type
+enum class Variable_integer : Variable_integer_type
 {
 };
 
-enum class control_packet_type
+enum class Control_packet_type
 {
 	reserved,
 	connect,
@@ -45,19 +45,18 @@ enum class control_packet_type
 	disconnect,
 };
 
-struct read_context
+struct Read_context
 {
 	std::size_t available = 0;
 	std::uint8_t sequence = 0;
 	std::uint32_t sequence_data[2]{};
-	variable_integer_type remaining_size = 5;
+	Variable_integer_type remaining_size = 5;
 
 	void clear() noexcept
 	{
-		sequence         = 0;
-		sequence_data[0] = 0;
-		sequence_data[1] = 0;
-		remaining_size   = 5;
+		const auto tmp = available;
+		*this          = {};
+		available      = tmp;
 	}
 };
 
@@ -81,9 +80,7 @@ inline bool protected_add(Left& left, Right right) noexcept
 	if (left > std::numeric_limits<Left>::max() - right) {
 		return false;
 	}
-
 	left += right;
-
 	return true;
 }
 

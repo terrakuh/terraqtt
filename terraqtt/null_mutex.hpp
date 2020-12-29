@@ -3,12 +3,12 @@
 
 namespace terraqtt {
 
-class null_mutex
+class Null_mutex
 {
 public:
-	null_mutex()                       = default;
-	null_mutex(const null_mutex& copy) = delete;
-	null_mutex(null_mutex&& move)      = delete;
+	Null_mutex()                       = default;
+	Null_mutex(const Null_mutex& copy) = delete;
+	Null_mutex(Null_mutex&& move)      = delete;
 	void lock() noexcept
 	{}
 	void unlock() noexcept

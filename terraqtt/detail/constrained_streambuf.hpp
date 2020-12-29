@@ -6,10 +6,10 @@
 namespace terraqtt {
 namespace detail {
 
-class constrained_streambuf : public std::streambuf
+class Constrained_streambuf : public std::streambuf
 {
 public:
-	constrained_streambuf(std::streambuf& parent, std::size_t remaining) noexcept : _parent(parent)
+	Constrained_streambuf(std::streambuf& parent, std::size_t remaining) noexcept : _parent(parent)
 	{
 		_remaining = remaining;
 	}
@@ -25,13 +25,10 @@ protected:
 			if (!_remaining) {
 				return traits_type::eof();
 			}
-
 			_parent.sgetn(_buffer, 1);
 			setg(_buffer, _buffer, _buffer + 1);
-
 			--_remaining;
 		}
-
 		return traits_type::to_int_type(_buffer[0]);
 	}
 

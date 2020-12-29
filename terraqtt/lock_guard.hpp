@@ -4,16 +4,16 @@
 namespace terraqtt {
 
 template<typename Lockable>
-class lock_guard
+class Lock_guard
 {
 public:
-	lock_guard(Lockable& lock) : _lock(lock)
+	Lock_guard(Lockable& lock) : _lock(lock)
 	{
 		lock.lock();
 	}
-	lock_guard(const Lockable& copy) = delete;
-	lock_guard(Lockable&& move)      = delete;
-	~lock_guard()
+	Lock_guard(const Lockable& copy) = delete;
+	Lock_guard(Lockable&& move)      = delete;
+	~Lock_guard()
 	{
 		_lock.unlock();
 	}

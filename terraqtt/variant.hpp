@@ -46,12 +46,12 @@ struct select_type<0, Type, Types...>
 } // namespace detail
 
 template<typename... Types>
-class variant
+class Variant
 {
 public:
 	constexpr static auto npos = sizeof...(Types);
 
-	~variant()
+	~Variant()
 	{
 		clear();
 	}
@@ -78,7 +78,7 @@ public:
 	typename detail::select_type<Index, Types...>::type* get(std::error_code& ec) noexcept
 	{
 		if (empty() || _index != Index) {
-			ec = errc::bad_variant_cast;
+			ec = Error::bad_variant_cast;
 			return nullptr;
 		}
 

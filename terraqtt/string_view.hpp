@@ -6,17 +6,24 @@
 
 namespace terraqtt {
 
-class string_view
+class String_view
 {
 public:
-	typedef char value_type;
+	typedef char Value_type;
 
-	string_view(const char* string) noexcept
+	template<std::size_t Size>
+	String_view(const char (&string)[Size]) noexcept
+	{
+		static_assert(Size > 0, "no string given");
+		_string = string;
+		_length = Size - 1;
+	}
+	String_view(const char* string) noexcept
 	{
 		_string = string;
 		_length = std::char_traits<char>::length(string);
 	}
-	string_view(const char* string, std::size_t length) noexcept
+	String_view(const char* string, std::size_t length) noexcept
 	{
 		_string = string;
 		_length = length;

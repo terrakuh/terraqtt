@@ -5,7 +5,7 @@
 
 namespace terraqtt {
 
-enum class errc
+enum class Error
 {
 	variable_integer_too_large = 1,
 	payload_too_large,
@@ -38,14 +38,6 @@ enum class errc
 	connection_timed_out,
 };
 
-#if defined(__cpp_exceptions)
-class exception : public std::system_error
-{
-public:
-	using system_error::system_error;
-};
-#endif
-
 inline const std::error_category& terraqtt_category() noexcept
 {
 	static class : public std::error_category
@@ -55,20 +47,22 @@ inline const std::error_category& terraqtt_category() noexcept
 		{
 			return "terraqtt";
 		}
-		std::string message(int ec) const override
+		std::string message(int e) const override
 		{
-			switch (static_cast<errc>(ec)) {
+			switch (static_cast<Error>(e)) {
+			case Error::empty_client_identifier: return "empty client identifier";
+			case Error::bad_variant_cast: return "bad variant cast";
+			case Error::connection_timed_out: return "connection timed out";
 			default: return "(unknown error code)";
 			}
 		}
 	} category;
-
 	return category;
 }
 
-inline std::error_code make_error_code(errc ec) noexcept
+inline std::error_code make_error_code(Error e) noexcept
 {
-	return { static_cast<int>(ec), terraqtt_category() };
+	return { static_cast<int>(e), terraqtt_category() };
 }
 
 } // namespace terraqtt
@@ -76,7 +70,7 @@ inline std::error_code make_error_code(errc ec) noexcept
 namespace std {
 
 template<>
-struct is_error_code_enum<terraqtt::errc> : true_type
+struct is_error_code_enum<terraqtt::Error> : true_type
 {};
 
 } // namespace std

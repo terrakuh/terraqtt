@@ -8,10 +8,10 @@
 namespace terraqtt {
 
 template<std::size_t Size, typename Type>
-class static_container
+class Static_container
 {
 public:
-	typedef Type value_type;
+	typedef Type Value_type;
 
 	void resize(std::size_t size) noexcept(std::is_nothrow_default_constructible<Type>::value)
 	{
