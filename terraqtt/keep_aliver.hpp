@@ -6,42 +6,39 @@
 
 namespace terraqtt {
 
-typedef std::chrono::duration<std::uint16_t> seconds;
+typedef std::chrono::duration<std::uint16_t> Seconds;
 
 template<typename Clock>
-class keep_aliver
+class Keep_aliver
 {
 public:
-	keep_aliver(seconds timeout = seconds{ 0 }) noexcept
+	Keep_aliver(Seconds timeout = Seconds{ 0 }) noexcept
 	{
 		_timeout = timeout;
 		reset();
 	}
 	void reset()
 	{
-		_next_timeout = Clock::now() + _timeout;
-		_next_reset   = Clock::time_point::min();
+		_next_ping    = Clock::now() + _timeout;
+		_ping_timeout = typename Clock::time_point{};
 	}
-	void start_reset_timeout()
+	void start_ping_timeout()
 	{
-		_next_timeout = Clock::time_point::max();
-		_next_reset   = Clock::now() + std::chrono::seconds{ 5 };
+		_ping_timeout = Clock::now() + std::chrono::seconds{ 15 };
 	}
-	bool needs_keeping_alive() const noexcept
+	bool needs_ping() const noexcept
 	{
-		const auto now = Clock::now();
-		return now >= _next_timeout && _next_reset < now;
+		return _ping_timeout == typename Clock::time_point{} && _next_ping < Clock::now();
 	}
-	bool reset_timeout() const noexcept
+	bool timed_out() const noexcept
 	{
-		const auto now = Clock::now();
-		return now >= _next_reset && now < _next_timeout;
+		return _ping_timeout != typename Clock::time_point{} && _ping_timeout < Clock::now();
 	}
 
 private:
-	typename Clock::time_point _next_timeout;
-	typename Clock::time_point _next_reset;
-	seconds _timeout;
+	typename Clock::time_point _next_ping;
+	typename Clock::time_point _ping_timeout;
+	Seconds _timeout;
 };
 
 } // namespace terraqtt
