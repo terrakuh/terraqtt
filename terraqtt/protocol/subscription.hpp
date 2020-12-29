@@ -40,7 +40,7 @@ struct Subscribe_header
 template<typename Return_code_container>
 struct Suback_header
 {
-	static_assert(std::is_same<typename Return_code_container::Value_type, Suback_return_code>::value,
+	static_assert(std::is_same<typename Return_code_container::value_type, Suback_return_code>::value,
 	              "Return_code_container must return return_code");
 
 	Return_code_container return_codes;

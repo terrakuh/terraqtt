@@ -34,11 +34,11 @@ constexpr typename std::enable_if<(sizeof...(Other) > 0), std::size_t>::type max
 }
 
 template<std::size_t Index, typename Type, typename... Types>
-struct select_type : select_type<Index - 1, Types...>
+struct Select_type : Select_type<Index - 1, Types...>
 {};
 
 template<typename Type, typename... Types>
-struct select_type<0, Type, Types...>
+struct Select_type<0, Type, Types...>
 {
 	typedef Type type;
 };
@@ -70,19 +70,19 @@ public:
 
 		clear();
 
-		new (&_data) typename detail::select_type<Index, Types...>::type{ std::forward<Args>(args)... };
+		new (&_data) typename detail::Select_type<Index, Types...>::type{ std::forward<Args>(args)... };
 
 		_index = Index;
 	}
 	template<std::size_t Index>
-	typename detail::select_type<Index, Types...>::type* get(std::error_code& ec) noexcept
+	typename detail::Select_type<Index, Types...>::type* get(std::error_code& ec) noexcept
 	{
 		if (empty() || _index != Index) {
 			ec = Error::bad_variant_cast;
 			return nullptr;
 		}
 
-		return reinterpret_cast<typename detail::select_type<Index, Types...>::type*>(&_data);
+		return reinterpret_cast<typename detail::Select_type<Index, Types...>::type*>(&_data);
 	}
 	std::size_t index() const noexcept
 	{

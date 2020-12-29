@@ -28,12 +28,11 @@ public:
 	using client::client;
 
 protected:
-	void on_publish(terraqtt::protocol::Publish_header<String_type>& header, std::istream& payload,
-	                std::size_t payload_size) override
+	void on_publish(std::error_code& ec, terraqtt::protocol::Publish_header<String_type>& header,
+	                std::istream& payload, std::size_t payload_size) override
 	{
 		std::cout << "received: " << payload.rdbuf() << std::endl;
 		if (header.qos == terraqtt::QOS::at_least_once) {
-			std::error_code ec;
 			terraqtt::protocol::write_packet(*output(), ec,
 			                                 terraqtt::protocol::Puback_header{ header.packet_identifier });
 		}

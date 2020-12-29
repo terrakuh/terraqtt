@@ -276,24 +276,24 @@ public:
 	}
 
 protected:
-	virtual void on_connack(protocol::Connack_header& header)
+	virtual void on_connack(std::error_code& ec, protocol::Connack_header& header)
 	{}
-	virtual void on_publish(protocol::Publish_header<String_type>& header, std::istream& payload,
-	                        std::size_t payload_size)
+	virtual void on_publish(std::error_code& ec, protocol::Publish_header<String_type>& header,
+	                        std::istream& payload, std::size_t payload_size)
 	{}
-	virtual void on_puback(protocol::Puback_header& header)
+	virtual void on_puback(std::error_code& ec, protocol::Puback_header& header)
 	{}
-	virtual void on_pubrec(protocol::Pubrec_header& header)
+	virtual void on_pubrec(std::error_code& ec, protocol::Pubrec_header& header)
 	{}
-	virtual void on_pubrel(protocol::pubrel_header& header)
+	virtual void on_pubrel(std::error_code& ec, protocol::pubrel_header& header)
 	{}
-	virtual void on_pubcomp(protocol::Pubcomp_header& header)
+	virtual void on_pubcomp(std::error_code& ec, protocol::Pubcomp_header& header)
 	{}
-	virtual void on_suback(protocol::Suback_header<Return_code_container_type>& header)
+	virtual void on_suback(std::error_code& ec, protocol::Suback_header<Return_code_container_type>& header)
 	{}
-	virtual void on_unsuback(protocol::Unsuback_header& header)
+	virtual void on_unsuback(std::error_code& ec, protocol::Unsuback_header& header)
 	{}
-	virtual void on_pingresp(protocol::Pingresp_header& header)
+	virtual void on_pingresp(std::error_code& ec, protocol::Pingresp_header& header)
 	{}
 
 private:
@@ -326,7 +326,10 @@ private:
 
 		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
 			_clear_read();
-			on_connack(*_read_header.template get<index>(ec));
+			auto& header = *_read_header.template get<index>(ec);
+			if (!ec) {
+				on_connack(ec, header);
+			}
 		}
 	}
 	void _handle_publish(std::error_code& ec)
@@ -344,12 +347,15 @@ private:
 			_clear_read();
 			detail::Constrained_streambuf buf{ *_input->rdbuf(), payload_size };
 			std::istream payload{ &buf };
-			on_publish(*_read_header.template get<index>(ec), payload, payload_size);
+			auto& header = *_read_header.template get<index>(ec);
+			if (!ec) {
+				on_publish(ec, header, payload, payload_size);
 
-			// ignore remaining
-			_read_ignore = buf.remaining();
-			_read_context.available =
-			    std::min<std::size_t>(0, _read_context.available - (payload_size - buf.remaining()));
+				// ignore remaining
+				_read_ignore = buf.remaining();
+				_read_context.available =
+				    std::min<std::size_t>(0, _read_context.available - (payload_size - buf.remaining()));
+			}
 		}
 	}
 	void _handle_puback(std::error_code& ec)
@@ -362,7 +368,10 @@ private:
 
 		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
 			_clear_read();
-			on_puback(*_read_header.template get<index>(ec));
+			auto& header = *_read_header.template get<index>(ec);
+			if (!ec) {
+				on_puback(ec, header);
+			}
 		}
 	}
 	void _handle_pubrec(std::error_code& ec)
@@ -374,7 +383,10 @@ private:
 
 		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
 			_clear_read();
-			on_pubrec(*_read_header.template get<index>(ec));
+			auto& header = *_read_header.template get<index>(ec);
+			if (!ec) {
+				on_pubrec(ec, header);
+			}
 		}
 	}
 	void _handle_pubrel(std::error_code& ec)
@@ -386,7 +398,10 @@ private:
 
 		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
 			_clear_read();
-			on_pubrel(*_read_header.template get<index>(ec));
+			auto& header = *_read_header.template get<index>(ec);
+			if (!ec) {
+				on_pubrel(ec, header);
+			}
 		}
 	}
 	void _handle_pubcomp(std::error_code& ec)
@@ -398,7 +413,10 @@ private:
 
 		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
 			_clear_read();
-			on_pubcomp(*_read_header.template get<index>(ec));
+			auto& header = *_read_header.template get<index>(ec);
+			if (!ec) {
+				on_pubcomp(ec, header);
+			}
 		}
 	}
 	void _handle_suback(std::error_code& ec)
@@ -410,7 +428,10 @@ private:
 
 		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
 			_clear_read();
-			on_suback(*_read_header.template get<index>(ec));
+			auto& header = *_read_header.template get<index>(ec);
+			if (!ec) {
+				on_suback(ec, header);
+			}
 		}
 	}
 	void _handle_unsuback(std::error_code& ec)
@@ -422,7 +443,10 @@ private:
 
 		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
 			_clear_read();
-			on_unsuback(*_read_header.template get<index>(ec));
+			auto& header = *_read_header.template get<index>(ec);
+			if (!ec) {
+				on_unsuback(ec, header);
+			}
 		}
 	}
 	void _handle_pingresp(std::error_code& ec)
@@ -434,7 +458,10 @@ private:
 
 		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
 			_clear_read();
-			on_pingresp(*_read_header.template get<index>(ec));
+			auto& header = *_read_header.template get<index>(ec);
+			if (!ec) {
+				on_pingresp(ec, header);
+			}
 		}
 	}
 };

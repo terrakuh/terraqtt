@@ -9,7 +9,7 @@ namespace terraqtt {
 class String_view
 {
 public:
-	typedef char Value_type;
+	typedef char value_type;
 
 	template<std::size_t Size>
 	String_view(const char (&string)[Size]) noexcept

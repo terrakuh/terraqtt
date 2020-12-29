@@ -11,7 +11,7 @@ template<std::size_t Size, typename Type>
 class Static_container
 {
 public:
-	typedef Type Value_type;
+	typedef Type value_type;
 
 	void resize(std::size_t size) noexcept(std::is_nothrow_default_constructible<Type>::value)
 	{
