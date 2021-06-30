@@ -3,6 +3,12 @@
 
 namespace terraqtt {
 
+/**
+ * A simple lock guard for systems without the threading library.
+ * 
+ * @private
+ * @tparam Mutex Must statisfy the BasicLockable requirements.
+*/
 template<typename Lockable>
 class Lock_guard
 {

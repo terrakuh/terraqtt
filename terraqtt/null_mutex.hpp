@@ -3,6 +3,7 @@
 
 namespace terraqtt {
 
+/// No operation mutex without any logic. Useful when the client runs in a single thread environment.
 class Null_mutex
 {
 public:

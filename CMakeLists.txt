@@ -9,19 +9,12 @@ set(CMAKE_CXX_STANDARD 11)
 option(TERRAQTT_BUILD_EXAMPLES "Build some example projects." ON)
 
 add_library(${PROJECT_NAME} INTERFACE)
+add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}
 	INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>")
 
 if(TERRAQTT_BUILD_EXAMPLES)
-	find_package(Boost 1.65 REQUIRED COMPONENTS system)
-	find_package(Threads REQUIRED)
-	add_executable(playground "examples/playground.cpp")
-	target_link_libraries(playground
-		${PROJECT_NAME}
-		Boost::boost
-		Boost::system
-		Threads::Threads)
-	# target_compile_options(playground PRIVATE -Wall -Wextra -pedantic -Werror -Wno-missing-field-initializers -Wno-unused-parameter)
+	add_subdirectory(examples)
 endif()
 
 # install

@@ -7,6 +7,13 @@
 
 namespace terraqtt {
 
+/**
+ * Basic container that stores its element inside its own memory. This container will not allocate any
+ * additional memory.
+ *
+ * @tparam Size the maximum amount of elements
+ * @tparam Type the element type
+ */
 template<std::size_t Size, typename Type>
 class Static_container
 {

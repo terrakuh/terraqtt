@@ -10,7 +10,7 @@
 
 namespace terraqtt {
 
-enum class QOS
+enum class QoS
 {
 	at_most_once,
 	at_least_once,

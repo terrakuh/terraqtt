@@ -11,7 +11,7 @@ template<typename String>
 struct Subscribe_topic
 {
 	String filter;
-	QOS qos;
+	QoS qos;
 };
 
 namespace protocol {

@@ -18,17 +18,50 @@
 
 namespace terraqtt {
 
-template<typename Input, typename Output, typename String, typename Return_code_container,
-         typename Basic_lockable, typename Clock>
+/// @example lightweight.cpp
+
+/**
+ * @code{.cpp}
+ * using namespace terraqtt;
+ *
+ * typedef Basic_client<std::istream, std::ostream, std::string, std::vector<protocol::Suback_return_code>,
+ *                      std::mutex, std::chrono::steady_clock> Easy_client;
+ * @endcode
+ */
+
+/**
+ * A basic MQTT client. This class only provides the means to communicate with the broker and does not
+ * actually follow the semantics of the protocol like keeping track of packet ids, acknowledging messages or
+ * quality of service.
+ *
+ * @see Null_mutex, Static_container, String_view
+ * @tparam Input The input stream type.
+ * @tparam Output The output stream type.
+ * @tparam String In what container strings like topics should be stored. Must statisfy the
+ * [Container](https://en.cppreference.com/w/cpp/named_req/Container) requirements.
+ * @tparam Mutex A mutex type used for synchronization. Must satisfy the
+ * [BasicLockable](https://en.cppreference.com/w/cpp/named_req/BasicLockable) requirements.
+ * @tparam Clock The clock used for timing purposes like keep alive. Must statisfy the
+ * [Clock](https://en.cppreference.com/w/cpp/named_req/Clock) requirements.
+ */
+template<typename Input, typename Output, typename String, typename Return_code_container, typename Mutex,
+         typename Clock>
 class Basic_client
 {
 public:
 	typedef String String_type;
 	typedef Return_code_container Return_code_container_type;
 
-	Basic_client(Input* input, Output* output) noexcept : _input{ input }, _output{ output }
+	/**
+	 * Constructor.
+	 *
+	 * @param[in] input The input stream.
+	 * @param[in] output The output stream.
+	 */
+	Basic_client(Input& input, Output& output) noexcept : _input{ &input }, _output{ &output }
 	{}
-	virtual ~Basic_client()
+	/// Destructor. Automatically disconnects from the server without waiting for the response.
+	virtual ~Basic_client() noexcept
 	{
 		std::error_code ec;
 		disconnect(ec);
@@ -61,7 +94,7 @@ public:
 		header.keep_alive    = keep_alive.count();
 		_keep_alive          = { keep_alive };
 
-		Lock_guard<Basic_lockable> _{ _output_mutex };
+		Lock_guard<Mutex> _{ _output_mutex };
 		protocol::write_packet(*_output, ec, header);
 	}
 #if defined(__cpp_exceptions)
@@ -76,7 +109,7 @@ public:
 	void disconnect(std::error_code& ec)
 	{
 		if (_output) {
-			Lock_guard<Basic_lockable> _{ _output_mutex };
+			Lock_guard<Mutex> _{ _output_mutex };
 			protocol::write_packet(*_output, ec, protocol::Disconnect_header{});
 			_output = nullptr;
 		}
@@ -84,7 +117,7 @@ public:
 #if defined(__cpp_exceptions)
 	template<typename Topic, typename Payload>
 	void publish(const Topic& topic, const Payload& payload, std::uint16_t packet_id = 0,
-	             QOS qos = QOS::at_most_once, bool retain = false)
+	             QoS qos = QoS::at_most_once, bool retain = false)
 	{
 		std::error_code ec;
 		if (publish(ec, topic, payload, packet_id, qos, retain), ec) {
@@ -106,14 +139,14 @@ public:
 	 */
 	template<typename Topic, typename Payload>
 	void publish(std::error_code& ec, const Topic& topic, const Payload& payload, std::uint16_t packet_id = 0,
-	             QOS qos = QOS::at_most_once, bool retain = false)
+	             QoS qos = QoS::at_most_once, bool retain = false)
 	{
 		protocol::Publish_header<const Topic&> header{ topic };
 		header.qos               = qos;
 		header.retain            = retain;
 		header.packet_identifier = packet_id;
 
-		Lock_guard<Basic_lockable> _{ _output_mutex };
+		Lock_guard<Mutex> _{ _output_mutex };
 		protocol::write_packet(*_output, ec, header, payload);
 	}
 #if defined(__cpp_exceptions)
@@ -139,7 +172,7 @@ public:
 		protocol::Subscribe_header<const std::initializer_list<Topic>&> header{ topics };
 		header.packet_identifier = packet_id;
 
-		Lock_guard<Basic_lockable> _{ _output_mutex };
+		Lock_guard<Mutex> _{ _output_mutex };
 		protocol::write_packet(*_output, ec, header);
 	}
 
@@ -166,7 +199,7 @@ public:
 		protocol::Unsubscribe_header<const std::initializer_list<Topic>&> header{ topics };
 		header.packet_identifier = packet_id;
 
-		Lock_guard<Basic_lockable> _{ _output_mutex };
+		Lock_guard<Mutex> _{ _output_mutex };
 		protocol::write_packet(*_output, ec, header);
 	}
 #if defined(__cpp_exceptions)
@@ -185,7 +218,7 @@ public:
 	 */
 	void ping(std::error_code& ec)
 	{
-		Lock_guard<Basic_lockable> _{ _output_mutex };
+		Lock_guard<Mutex> _{ _output_mutex };
 		protocol::write_packet(*_output, ec, protocol::Pingreq_header{});
 	}
 #if defined(__cpp_exceptions)
@@ -223,7 +256,7 @@ public:
 	/**
 	 * Processes up to `available` bytes. Can be used in a non-blocking fashion.
 	 *
-	 * @param ec[out] the error code, if any
+	 * @param[out] ec the error code, if any
 	 * @param available the amount of bytes available to read
 	 * @return the amount of bytes processed
 	 */
@@ -276,27 +309,38 @@ public:
 	}
 
 protected:
-	virtual void on_connack(std::error_code& ec, protocol::Connack_header& header)
+	virtual void on_connack(std::error_code& ec, const protocol::Connack_header& header)
 	{}
-	virtual void on_publish(std::error_code& ec, protocol::Publish_header<String_type>& header,
+	/**
+	 * Called when the broker published something to a subscribed topic. Quality of serivce is not handled.
+	 *
+	 * @param[out] ec error code if any
+	 * @param header information about the received header
+	 * @param[in] payload a stream of the payload; if the data is not read when the function exits, the
+	 * remaining data is discarded
+	 * @param payload_size size of the payload in bytes
+	 */
+	virtual void on_publish(std::error_code& ec, const protocol::Publish_header<String_type>& header,
 	                        std::istream& payload, std::size_t payload_size)
 	{}
-	virtual void on_puback(std::error_code& ec, protocol::Puback_header& header)
+	virtual void on_puback(std::error_code& ec, const protocol::Puback_header& header)
 	{}
-	virtual void on_pubrec(std::error_code& ec, protocol::Pubrec_header& header)
+	virtual void on_pubrec(std::error_code& ec, const protocol::Pubrec_header& header)
 	{}
-	virtual void on_pubrel(std::error_code& ec, protocol::pubrel_header& header)
+	virtual void on_pubrel(std::error_code& ec, const protocol::pubrel_header& header)
 	{}
-	virtual void on_pubcomp(std::error_code& ec, protocol::Pubcomp_header& header)
+	virtual void on_pubcomp(std::error_code& ec, const protocol::Pubcomp_header& header)
 	{}
-	virtual void on_suback(std::error_code& ec, protocol::Suback_header<Return_code_container_type>& header)
+	virtual void on_suback(std::error_code& ec,
+	                       const protocol::Suback_header<Return_code_container_type>& header)
 	{}
-	virtual void on_unsuback(std::error_code& ec, protocol::Unsuback_header& header)
+	virtual void on_unsuback(std::error_code& ec, const protocol::Unsuback_header& header)
 	{}
-	virtual void on_pingresp(std::error_code& ec, protocol::Pingresp_header& header)
+	virtual void on_pingresp(std::error_code& ec, const protocol::Pingresp_header& header)
 	{}
 
 private:
+	/// How many bytes should be ignored for the next read call.
 	std::size_t _read_ignore = 0;
 	protocol::Read_context _read_context{};
 	protocol::Control_packet_type _read_type = protocol::Control_packet_type::reserved;
@@ -306,7 +350,7 @@ private:
 	        protocol::Pingresp_header>
 	    _read_header;
 	Keep_aliver<Clock> _keep_alive;
-	Basic_lockable _output_mutex;
+	Mutex _output_mutex;
 	Input* _input;
 	Output* _output;
 

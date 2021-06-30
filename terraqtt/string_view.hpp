@@ -6,11 +6,18 @@
 
 namespace terraqtt {
 
+/// A simple string container holding a single `const char*` and its length.
 class String_view
 {
 public:
 	typedef char value_type;
 
+	/**
+	 * Constructor.
+	 *
+	 * @param string The static memory buffer.
+	 * @tparam Size The size of the buffer. The string size equals to `Size - 1`.
+	 */
 	template<std::size_t Size>
 	String_view(const char (&string)[Size]) noexcept
 	{
@@ -18,11 +25,22 @@ public:
 		_string = string;
 		_length = Size - 1;
 	}
+	/**
+	 * Constructor.
+	 *
+	 * @param string A zero terminated string.
+	 */
 	String_view(const char* string) noexcept
 	{
 		_string = string;
 		_length = std::char_traits<char>::length(string);
 	}
+	/**
+	 * Constructor.
+	 *
+	 * @param string The string.
+	 * @param length The size of the string.
+	 */
 	String_view(const char* string, std::size_t length) noexcept
 	{
 		_string = string;

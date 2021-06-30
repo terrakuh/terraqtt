@@ -29,7 +29,7 @@ struct Connect_header
 	std::pair<String, Will_message>* will;
 	typename std::remove_reference<String>::type* username;
 	typename std::remove_reference<Password>::type* password;
-	QOS will_qos;
+	QoS will_qos;
 	bool will_retain;
 	bool clean_session;
 	/// the keep alive timeout in seconds; 0 means no timeout
@@ -49,7 +49,7 @@ template<typename Output, typename String, typename Will_message, typename Passw
 inline void write_packet(Output& output, std::error_code& ec,
                          const Connect_header<String, Will_message, Password>& header)
 {
-	if (!header.will && (header.will_qos != QOS::at_most_once || header.will_retain)) {
+	if (!header.will && (header.will_qos != QoS::at_most_once || header.will_retain)) {
 		ec = Error::bad_will;
 		return;
 	} else if (!header.username && header.password) {

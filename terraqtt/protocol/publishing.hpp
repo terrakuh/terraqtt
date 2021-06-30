@@ -14,7 +14,7 @@ struct Publish_header
 	String topic;
 	bool duplicate;
 	bool retain;
-	enum QOS qos;
+	enum QoS qos;
 	std::uint16_t packet_identifier;
 };
 
@@ -43,7 +43,7 @@ inline void write_packet(Output& output, std::error_code& ec, const Publish_head
                          const Payload& payload)
 {
 	typename std::underlying_type<Variable_integer>::type remaining =
-	    2 + (header.qos != QOS::at_most_once ? 2 : 0);
+	    2 + (header.qos != QoS::at_most_once ? 2 : 0);
 
 	if (!protected_add(remaining, header.topic.size()) || !protected_add(remaining, payload.size())) {
 		ec = Error::payload_too_large;
@@ -60,7 +60,7 @@ inline void write_packet(Output& output, std::error_code& ec, const Publish_head
 		return;
 	}
 
-	if (header.qos != QOS::at_most_once) {
+	if (header.qos != QoS::at_most_once) {
 		if (write_elements(output, ec, header.packet_identifier), ec) {
 			return;
 		}
@@ -79,10 +79,10 @@ inline bool read_packet(Input& input, std::error_code& ec, Read_context& context
 			return false;
 		}
 		header.duplicate = type >> 3 & 1;
-		header.qos       = static_cast<QOS>(type >> 1 & 0x03);
+		header.qos       = static_cast<QoS>(type >> 1 & 0x03);
 		header.retain    = type & 1;
-		if (header.qos != QOS::at_most_once && header.qos != QOS::at_least_once &&
-		    header.qos != QOS::exactly_once) {
+		if (header.qos != QoS::at_most_once && header.qos != QoS::at_least_once &&
+		    header.qos != QoS::exactly_once) {
 			ec = Error::bad_qos;
 			return false;
 		}
@@ -100,7 +100,7 @@ inline bool read_packet(Input& input, std::error_code& ec, Read_context& context
 		return false;
 	}
 
-	if (header.qos != QOS::at_most_once) {
+	if (header.qos != QoS::at_most_once) {
 		if (!read_element(input, ec, context, header.packet_identifier) || ec) {
 			return false;
 		}
