@@ -7,19 +7,20 @@ namespace terraqtt {
 namespace detail {
 
 /**
- * Constrains the available readable size of an existing streambuf to a given size. Once the bytes are read they cannot be returned.
- * 
+ * Constrains the available readable size of an existing streambuf to a given size. Once the bytes are read
+ * they cannot be returned.
+ *
  * @private
-*/
+ */
 class Constrained_streambuf : public std::streambuf
 {
 public:
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param[in] parent The parent stream buffer.
 	 * @param remaining The amount of allowed bytes to be read.
-	*/
+	 */
 	Constrained_streambuf(std::streambuf& parent, std::size_t remaining) noexcept : _parent(parent)
 	{
 		_remaining = remaining;
@@ -29,11 +30,18 @@ public:
 	{
 		return _remaining;
 	}
+	std::size_t release()
+	{
+		const std::size_t remaining = _remaining - static_cast<std::size_t>(egptr() - gptr());
+		_remaining = 0;
+		setg(nullptr, nullptr, nullptr);
+		return remaining;
+	}
 
 protected:
 	/**
 	 * @todo Improve performance batch reading and not one character only.
-	*/
+	 */
 	int_type underflow() override
 	{
 		if (gptr() == egptr()) {

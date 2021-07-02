@@ -10,7 +10,7 @@ namespace terraqtt {
 typedef std::chrono::duration<std::uint16_t> Seconds;
 
 /**
- * Keeps track of the keep-alive state of client connection.
+ * Keeps track of the keep-alive state of client connection. This class is not thread safe.
  *
  * @private
  * @tparam Clock A clock type that statisfies the Clock requirements.
@@ -35,6 +35,11 @@ public:
 		_next_ping    = Clock::now() + _timeout;
 		_ping_timeout = typename Clock::time_point{};
 	}
+	/// Marks the ping as completed.
+	void complete()
+	{
+		_ping_timeout = typename Clock::time_point{};
+	}
 	/// Starts the timeout for the required ping response from the broker.
 	void start_ping_timeout()
 	{
@@ -43,7 +48,7 @@ public:
 	/// Checks whether a ping operation is required to keep the connection alive.
 	bool needs_ping() const noexcept
 	{
-		return _ping_timeout == typename Clock::time_point{} && _next_ping < Clock::now();
+		return Clock::now() >= _next_ping;
 	}
 	/// Checks whether the timeout has expired.
 	bool timed_out() const noexcept

@@ -1,0 +1,9 @@
+#ifndef TERRAQTT_CONFIG_HPP_
+#define TERRAQTT_CONFIG_HPP_
+
+// clang-format off
+#cmakedefine01 TERRAQTT_LOG_ENABLE
+#cmakedefine TERRAQTT_LOG_LEVEL @TERRAQTT_LOG_LEVEL@
+// clang-format on
+
+#endif

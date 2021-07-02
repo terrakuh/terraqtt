@@ -16,7 +16,7 @@ struct Subscribe_topic
 
 namespace protocol {
 
-enum class Suback_return_code
+enum class Suback_return_code : Byte
 {
 	success0 = 0x00,
 	success1 = 0x01,
@@ -151,11 +151,11 @@ inline bool read_packet(Input& input, std::error_code& ec, Read_context& context
 	}
 
 	while (context.remaining_size) {
-		Byte rc;
+		Suback_return_code rc;
 		if (!read_element(input, ec, context, rc) || ec) {
 			return false;
 		}
-		header.return_codes.push_back(static_cast<Suback_return_code>(rc));
+		header.return_codes.push_back(rc);
 	}
 	return true;
 }

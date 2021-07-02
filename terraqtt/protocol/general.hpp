@@ -47,11 +47,16 @@ enum class Control_packet_type
 
 struct Read_context
 {
+	/// How much data is available.
 	std::size_t available = 0;
+	/// The current sequence id.
 	std::uint8_t sequence = 0;
+	/// Some sequence specific data.
 	std::uint32_t sequence_data[2]{};
+	/// The remaining size for the current packet.
 	Variable_integer_type remaining_size = 5;
 
+	/// Resets the data except for the available field.
 	void clear() noexcept
 	{
 		const auto tmp = available;

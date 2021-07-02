@@ -7,14 +7,23 @@ project(terraqtt
 set(CMAKE_CXX_STANDARD 11)
 
 option(TERRAQTT_BUILD_EXAMPLES "Build some example projects." ON)
+option(TERRAQTT_LOG_ENABLE "Enables logging output." OFF)
+set(TERRAQTT_LOG_LEVEL "INFO" CACHE STRING "The logging level (CIRITICAL, ERROR, WARN, INFO, DEBUG, TRACE)")
+set_property(CACHE TERRAQTT_LOG_LEVEL PROPERTY STRINGS "CRITICAL" "ERROR" "WARN" "INFO" "DEBUG" "TRACE")
+
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.hpp.in" "${CMAKE_CURRENT_SOURCE_DIR}/terraqtt/config.hpp")
 
 add_library(${PROJECT_NAME} INTERFACE)
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-target_include_directories(${PROJECT_NAME}
-	INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>")
+target_include_directories(${PROJECT_NAME} INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>")
 
 if(TERRAQTT_BUILD_EXAMPLES)
 	add_subdirectory(examples)
+endif()
+
+if(TERRAQTT_LOG_ENABLE)
+	find_package(spdlog REQUIRED)
+	target_link_libraries(${PROJECT_NAME} INTERFACE spdlog::spdlog)
 endif()
 
 # install

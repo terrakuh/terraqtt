@@ -4,6 +4,7 @@
 #include "../error.hpp"
 #include "general.hpp"
 
+#include <type_traits>
 #include <utility>
 
 namespace terraqtt {
@@ -16,11 +17,12 @@ inline Control_packet_type peek_type(Input& input, std::error_code& ec, Read_con
 		return static_cast<Control_packet_type>(input.peek() >> 4 & 0x0f);
 	}
 	ec = std::make_error_code(std::errc::io_error);
-	return Control_packet_type{};
+	return Control_packet_type::reserved;
 }
 
-template<typename Input>
-inline bool read_element(Input& input, std::error_code& ec, Read_context& context, Byte& out)
+template<typename Input, typename Type>
+inline typename std::enable_if<(std::is_trivial<Type>::value && sizeof(Type) == 1), bool>::type
+    read_element(Input& input, std::error_code& ec, Read_context& context, Type& out)
 {
 	if (!context.available) {
 		return false;

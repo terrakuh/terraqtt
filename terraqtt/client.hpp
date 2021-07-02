@@ -3,7 +3,7 @@
 
 #include "detail/constrained_streambuf.hpp"
 #include "keep_aliver.hpp"
-#include "lock_guard.hpp"
+#include "log.hpp"
 #include "protocol/connection.hpp"
 #include "protocol/ping.hpp"
 #include "protocol/publishing.hpp"
@@ -92,9 +92,8 @@ public:
 		protocol::Connect_header<const Identifier&, const String&, const String&> header{ identifier };
 		header.clean_session = clean_session;
 		header.keep_alive    = keep_alive.count();
-		_keep_alive          = { keep_alive };
+		this->keep_alive     = { keep_alive };
 
-		Lock_guard<Mutex> _{ _output_mutex };
 		protocol::write_packet(*_output, ec, header);
 	}
 #if defined(__cpp_exceptions)
@@ -109,7 +108,6 @@ public:
 	void disconnect(std::error_code& ec)
 	{
 		if (_output) {
-			Lock_guard<Mutex> _{ _output_mutex };
 			protocol::write_packet(*_output, ec, protocol::Disconnect_header{});
 			_output = nullptr;
 		}
@@ -146,7 +144,6 @@ public:
 		header.retain            = retain;
 		header.packet_identifier = packet_id;
 
-		Lock_guard<Mutex> _{ _output_mutex };
 		protocol::write_packet(*_output, ec, header, payload);
 	}
 #if defined(__cpp_exceptions)
@@ -172,7 +169,6 @@ public:
 		protocol::Subscribe_header<const std::initializer_list<Topic>&> header{ topics };
 		header.packet_identifier = packet_id;
 
-		Lock_guard<Mutex> _{ _output_mutex };
 		protocol::write_packet(*_output, ec, header);
 	}
 
@@ -199,7 +195,6 @@ public:
 		protocol::Unsubscribe_header<const std::initializer_list<Topic>&> header{ topics };
 		header.packet_identifier = packet_id;
 
-		Lock_guard<Mutex> _{ _output_mutex };
 		protocol::write_packet(*_output, ec, header);
 	}
 #if defined(__cpp_exceptions)
@@ -218,8 +213,9 @@ public:
 	 */
 	void ping(std::error_code& ec)
 	{
-		Lock_guard<Mutex> _{ _output_mutex };
+		TERRAQTT_LOG(TRACE, "Sending ping request");
 		protocol::write_packet(*_output, ec, protocol::Pingreq_header{});
+		keep_alive.reset();
 	}
 #if defined(__cpp_exceptions)
 	void update_state()
@@ -237,11 +233,13 @@ public:
 	 */
 	void update_state(std::error_code& ec)
 	{
-		if (_keep_alive.needs_ping()) {
+		if (keep_alive.needs_ping()) {
 			if (ping(ec), !ec) {
-				_keep_alive.start_ping_timeout();
+				TERRAQTT_LOG(DEBUG, "Starting ping timeout");
+				keep_alive.start_ping_timeout();
 			}
-		} else if (_keep_alive.timed_out()) {
+		} else if (keep_alive.timed_out()) {
+			TERRAQTT_LOG(ERROR, "No packet received during ping timeout");
 			ec = Error::connection_timed_out;
 		}
 	}
@@ -256,22 +254,17 @@ public:
 	/**
 	 * Processes up to `available` bytes. Can be used in a non-blocking fashion.
 	 *
-	 * @param[out] ec the error code, if any
-	 * @param available the amount of bytes available to read
-	 * @return the amount of bytes processed
+	 * @param[out] ec The error code if any.
+	 * @param available How many bytes can be read without blocking. If this value is larger than the actual
+	 * input buffer size, this function will block until one packet has been processed.
+	 * @returns How many bytes were processed.
 	 */
 	std::size_t process_one(std::error_code& ec,
 	                        std::size_t available = std::numeric_limits<std::size_t>::max())
 	{
-		_read_context.available += available;
+		_read_context.available = available;
 
-		// skip
-		if (const auto skip = std::min(_read_ignore, _read_context.available)) {
-			_input->ignore(skip);
-			_read_ignore -= skip;
-			_read_context.available -= skip;
-		}
-
+		_skip_ignored();
 		if (!_read_context.available) {
 			return 0;
 		} // read new packet
@@ -296,8 +289,15 @@ public:
 		case protocol::Control_packet_type::pingresp: _handle_pingresp(ec); break;
 		default: ec = Error::bad_packet_type; break;
 		}
-		return _read_context.available > available ? _read_context.available - available
-		                                           : available - _read_context.available;
+		if (ec) {
+			TERRAQTT_LOG(ERROR, "Error during packet handling: {}", ec.message());
+		}
+
+		_skip_ignored();
+		const std::size_t processed = available - _read_context.available + _overread;
+		_overread                   = 0;
+		TERRAQTT_LOG(TRACE, "Processed {} bytes", processed);
+		return processed;
 	}
 	Input* input() noexcept
 	{
@@ -309,6 +309,9 @@ public:
 	}
 
 protected:
+	/// This keeps track of the keep alive timeout. The timeout is reset after the client sends a packet.
+	Keep_aliver<Clock> keep_alive;
+
 	virtual void on_connack(std::error_code& ec, const protocol::Connack_header& header)
 	{}
 	/**
@@ -342,6 +345,8 @@ protected:
 private:
 	/// How many bytes should be ignored for the next read call.
 	std::size_t _read_ignore = 0;
+	/// How many bytes were read 'overread'.
+	std::size_t _overread = 0;
 	protocol::Read_context _read_context{};
 	protocol::Control_packet_type _read_type = protocol::Control_packet_type::reserved;
 	Variant<protocol::Connack_header, protocol::Publish_header<String>, protocol::Puback_header,
@@ -349,8 +354,6 @@ private:
 	        protocol::Suback_header<Return_code_container>, protocol::Unsuback_header,
 	        protocol::Pingresp_header>
 	    _read_header;
-	Keep_aliver<Clock> _keep_alive;
-	Mutex _output_mutex;
 	Input* _input;
 	Output* _output;
 
@@ -359,10 +362,23 @@ private:
 	{
 		_read_type = protocol::Control_packet_type::reserved;
 		_read_context.clear();
-		_keep_alive.reset();
+	}
+	void _skip_ignored()
+	{
+		if (const std::size_t skip = std::min(_read_ignore, _read_context.available)) {
+			TERRAQTT_LOG(DEBUG, "Skipping {}/{} bytes before processing", skip, _read_ignore);
+			char buffer[32];
+			// somehow ignore() does not work
+			for (std::size_t i = 0; i < skip; i += 32) {
+				_input->read(buffer, std::min<std::size_t>(skip - i, 32));
+			}
+			_read_ignore -= skip;
+			_read_context.available -= skip;
+		}
 	}
 	void _handle_connack(std::error_code& ec)
 	{
+		TERRAQTT_LOG(DEBUG, "Handling CONNACK packet");
 		constexpr auto index = 0;
 		if (!_read_context.sequence) {
 			_read_header.template emplace<index>();
@@ -378,13 +394,13 @@ private:
 	}
 	void _handle_publish(std::error_code& ec)
 	{
+		TERRAQTT_LOG(DEBUG, "Handling PUBLISH packet");
 		constexpr auto index = 1;
 		if (!_read_context.sequence) {
 			_read_header.template emplace<index>();
 		}
 
 		protocol::Variable_integer_type payload_size = 0;
-		const auto total_available                   = _read_context.available;
 		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec),
 		                          payload_size) &&
 		    !ec) {
@@ -392,20 +408,27 @@ private:
 			detail::Constrained_streambuf buf{ *_input->rdbuf(), payload_size };
 			std::istream payload{ &buf };
 			auto& header = *_read_header.template get<index>(ec);
+			TERRAQTT_LOG(DEBUG, "Received PUBLISH packet");
 			if (!ec) {
 				on_publish(ec, header, payload, payload_size);
 
 				// ignore remaining
-				_read_ignore = buf.remaining();
-				_read_context.available =
-				    std::min<std::size_t>(0, _read_context.available - (payload_size - buf.remaining()));
+				_read_ignore           = buf.release();
+				const std::size_t read = payload_size - _read_ignore;
+				if (read > _read_context.available) {
+					_read_context.available = 0;
+					_overread               = read - _read_context.available;
+				} else {
+					_read_context.available -= read;
+				}
+				TERRAQTT_LOG(TRACE, "Handler read {}/{} bytes from the payload", read, payload_size);
 			}
 		}
 	}
 	void _handle_puback(std::error_code& ec)
 	{
+		TERRAQTT_LOG(DEBUG, "Handling PUBACK packet");
 		constexpr auto index = 2;
-
 		if (!_read_context.sequence) {
 			_read_header.template emplace<index>();
 		}
@@ -420,6 +443,7 @@ private:
 	}
 	void _handle_pubrec(std::error_code& ec)
 	{
+		TERRAQTT_LOG(DEBUG, "Handling PUBREC packet");
 		constexpr auto index = 3;
 		if (!_read_context.sequence) {
 			_read_header.template emplace<index>();
@@ -435,6 +459,7 @@ private:
 	}
 	void _handle_pubrel(std::error_code& ec)
 	{
+		TERRAQTT_LOG(DEBUG, "Handling PUBREL packet");
 		constexpr auto index = 4;
 		if (!_read_context.sequence) {
 			_read_header.template emplace<index>();
@@ -450,6 +475,7 @@ private:
 	}
 	void _handle_pubcomp(std::error_code& ec)
 	{
+		TERRAQTT_LOG(DEBUG, "Handling PUBCOMP packet");
 		constexpr auto index = 5;
 		if (!_read_context.sequence) {
 			_read_header.template emplace<index>();
@@ -465,6 +491,7 @@ private:
 	}
 	void _handle_suback(std::error_code& ec)
 	{
+		TERRAQTT_LOG(DEBUG, "Handling SUBACK packet");
 		constexpr auto index = 6;
 		if (!_read_context.sequence) {
 			_read_header.template emplace<index>();
@@ -473,6 +500,8 @@ private:
 		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
 			_clear_read();
 			auto& header = *_read_header.template get<index>(ec);
+			TERRAQTT_LOG(TRACE, "SUBACK: Received {} retrun codes for packet={}", header.return_codes.size(),
+			             header.packet_identifier);
 			if (!ec) {
 				on_suback(ec, header);
 			}
@@ -495,6 +524,7 @@ private:
 	}
 	void _handle_pingresp(std::error_code& ec)
 	{
+		TERRAQTT_LOG(TRACE, "Handling PINGRESP");
 		constexpr auto index = 8;
 		if (!_read_context.sequence) {
 			_read_header.template emplace<index>();
@@ -503,6 +533,8 @@ private:
 		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
 			_clear_read();
 			auto& header = *_read_header.template get<index>(ec);
+			TERRAQTT_LOG(DEBUG, "Received full PINGRESP packet");
+			keep_alive.complete();
 			if (!ec) {
 				on_pingresp(ec, header);
 			}

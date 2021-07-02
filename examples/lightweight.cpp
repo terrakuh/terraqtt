@@ -27,17 +27,19 @@ protected:
 	void on_publish(std::error_code& ec, const protocol::Publish_header<String_type>& header,
 	                std::istream& payload, std::size_t payload_size) override
 	{
-		std::cout << "received (topic='" << header.topic.begin() << "'): " << payload.rdbuf() << std::endl;
+		// payload.ignore(payload_size);
+		// std::cout << "received (topic='" << header.topic.begin() << "'): " << payload.rdbuf() << std::endl;
 
-		// the protocol requires an acknoledgment for QoS=1
-		if (header.qos == QoS::at_least_once) {
-			protocol::write_packet(*output(), ec, protocol::Puback_header{ header.packet_identifier });
-		}
+		// // the protocol requires an acknoledgment for QoS=1
+		// if (header.qos == QoS::at_least_once) {
+		// 	protocol::write_packet(*output(), ec, protocol::Puback_header{ header.packet_identifier });
+		// }
 	}
 };
 
 int main()
 try {
+	spdlog::set_level(spdlog::level::trace);
 	ip::tcp::iostream stream;
 	stream.connect(ip::tcp::endpoint{ ip::address::from_string("192.168.178.31"), 1883 });
 	if (!stream) {
@@ -46,15 +48,21 @@ try {
 	}
 
 	Client client{ stream, stream };
-	client.connect(String_view{ "der.klient" }, false, Seconds{ 30 });
+	client.connect(String_view{ "der.klient" }, true, Seconds{ 5 });
 	client.subscribe({ Subscribe_topic<String_view>{ "test", QoS::at_most_once } }, 1);
+	client.subscribe({ Subscribe_topic<String_view>{ "pc/led/version", QoS::at_most_once } }, 2);
+	client.subscribe({ Subscribe_topic<String_view>{ "bed/ledversion", QoS::at_most_once } }, 3);
+	client.subscribe({ Subscribe_topic<String_view>{ "test/led/version", QoS::at_most_once } }, 4);
+	std::size_t available = 0;
 
 	while (stream) {
 		std::error_code e;
 		boost::system::error_code ec;
+		available += stream.rdbuf()->lowest_layer().available(ec);
 
-		if (const auto c = client.process_one(e, stream.rdbuf()->lowest_layer().available(ec))) {
-			std::cout << "processed: " << c << " bytes (" << e << ")\n";
+		if (const auto c = client.process_one(e, available)) {
+			available -= c;
+			// std::cout << "processed: " << c << " bytes (" << e << ")\n";
 		}
 		if (ec) {
 			std::cerr << "stream error: " << ec << std::endl;
@@ -62,10 +70,12 @@ try {
 		}
 
 		client.update_state();
+		stream.flush();
 		std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });
 	}
 	std::cerr << "stream broken\n";
 } catch (const std::system_error& e) {
-	std::cerr << "exception caught (" << e.code() << "): " << e.what() << '\n';
+	// std::cerr << "exception caught (" << e.code() << "): " << e.what() << '\n';
+	TERRAQTT_LOG(CRITICAL, "Exception from main ({}): {}", e.code().value(), e.what());
 	return 1;
 }
