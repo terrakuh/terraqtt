@@ -41,7 +41,10 @@ protected:
 
 int main()
 try {
+#if TERRAQTT_LOG_ENABLE
 	spdlog::set_level(spdlog::level::trace);
+#endif
+
 	ip::tcp::iostream stream;
 	stream.connect(ip::tcp::endpoint{ ip::address::from_string("127.0.0.1"), 1883 });
 	if (!stream) {
