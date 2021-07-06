@@ -1,1 +1,0 @@
-/bin/clang++-11  -g  -rdynamic CMakeFiles/test.dir/basic.cpp.o  -o test  /usr/local/lib/libspdlog.a -lpthread 
