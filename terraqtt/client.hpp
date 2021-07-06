@@ -39,13 +39,10 @@ namespace terraqtt {
  * @tparam Output The output stream type.
  * @tparam String In what container strings like topics should be stored. Must statisfy the
  * [Container](https://en.cppreference.com/w/cpp/named_req/Container) requirements.
- * @tparam Mutex A mutex type used for synchronization. Must satisfy the
- * [BasicLockable](https://en.cppreference.com/w/cpp/named_req/BasicLockable) requirements.
  * @tparam Clock The clock used for timing purposes like keep alive. Must statisfy the
  * [Clock](https://en.cppreference.com/w/cpp/named_req/Clock) requirements.
  */
-template<typename Input, typename Output, typename String, typename Return_code_container, typename Mutex,
-         typename Clock>
+template<typename Input, typename Output, typename String, typename Return_code_container, typename Clock>
 class Basic_client
 {
 public:
@@ -378,7 +375,7 @@ private:
 	}
 	void _handle_connack(std::error_code& ec)
 	{
-		TERRAQTT_LOG(DEBUG, "Handling CONNACK packet");
+		TERRAQTT_LOG(TRACE, "Handling CONNACK packet");
 		constexpr auto index = 0;
 		if (!_read_context.sequence) {
 			_read_header.template emplace<index>();
@@ -388,13 +385,14 @@ private:
 			_clear_read();
 			auto& header = *_read_header.template get<index>(ec);
 			if (!ec) {
+				TERRAQTT_LOG(DEBUG, "Received CONNACK packet");
 				on_connack(ec, header);
 			}
 		}
 	}
 	void _handle_publish(std::error_code& ec)
 	{
-		TERRAQTT_LOG(DEBUG, "Handling PUBLISH packet");
+		TERRAQTT_LOG(TRACE, "Handling PUBLISH packet");
 		constexpr auto index = 1;
 		if (!_read_context.sequence) {
 			_read_header.template emplace<index>();
@@ -408,8 +406,8 @@ private:
 			detail::Constrained_streambuf buf{ *_input->rdbuf(), payload_size };
 			std::istream payload{ &buf };
 			auto& header = *_read_header.template get<index>(ec);
-			TERRAQTT_LOG(DEBUG, "Received PUBLISH packet");
 			if (!ec) {
+				TERRAQTT_LOG(DEBUG, "Received PUBLISH packet");
 				on_publish(ec, header, payload, payload_size);
 
 				// ignore remaining
@@ -427,7 +425,7 @@ private:
 	}
 	void _handle_puback(std::error_code& ec)
 	{
-		TERRAQTT_LOG(DEBUG, "Handling PUBACK packet");
+		TERRAQTT_LOG(TRACE, "Handling PUBACK packet");
 		constexpr auto index = 2;
 		if (!_read_context.sequence) {
 			_read_header.template emplace<index>();
@@ -437,13 +435,14 @@ private:
 			_clear_read();
 			auto& header = *_read_header.template get<index>(ec);
 			if (!ec) {
+				TERRAQTT_LOG(DEBUG, "Received PUBACK packet");
 				on_puback(ec, header);
 			}
 		}
 	}
 	void _handle_pubrec(std::error_code& ec)
 	{
-		TERRAQTT_LOG(DEBUG, "Handling PUBREC packet");
+		TERRAQTT_LOG(TRACE, "Handling PUBREC packet");
 		constexpr auto index = 3;
 		if (!_read_context.sequence) {
 			_read_header.template emplace<index>();
@@ -453,13 +452,14 @@ private:
 			_clear_read();
 			auto& header = *_read_header.template get<index>(ec);
 			if (!ec) {
+				TERRAQTT_LOG(DEBUG, "Received PUBREC packet");
 				on_pubrec(ec, header);
 			}
 		}
 	}
 	void _handle_pubrel(std::error_code& ec)
 	{
-		TERRAQTT_LOG(DEBUG, "Handling PUBREL packet");
+		TERRAQTT_LOG(TRACE, "Handling PUBREL packet");
 		constexpr auto index = 4;
 		if (!_read_context.sequence) {
 			_read_header.template emplace<index>();
@@ -469,13 +469,14 @@ private:
 			_clear_read();
 			auto& header = *_read_header.template get<index>(ec);
 			if (!ec) {
+				TERRAQTT_LOG(DEBUG, "Received PUBREL packet");
 				on_pubrel(ec, header);
 			}
 		}
 	}
 	void _handle_pubcomp(std::error_code& ec)
 	{
-		TERRAQTT_LOG(DEBUG, "Handling PUBCOMP packet");
+		TERRAQTT_LOG(TRACE, "Handling PUBCOMP packet");
 		constexpr auto index = 5;
 		if (!_read_context.sequence) {
 			_read_header.template emplace<index>();
@@ -485,13 +486,14 @@ private:
 			_clear_read();
 			auto& header = *_read_header.template get<index>(ec);
 			if (!ec) {
+				TERRAQTT_LOG(DEBUG, "Received PUBCOMP packet");
 				on_pubcomp(ec, header);
 			}
 		}
 	}
 	void _handle_suback(std::error_code& ec)
 	{
-		TERRAQTT_LOG(DEBUG, "Handling SUBACK packet");
+		TERRAQTT_LOG(TRACE, "Handling SUBACK packet");
 		constexpr auto index = 6;
 		if (!_read_context.sequence) {
 			_read_header.template emplace<index>();
@@ -500,15 +502,16 @@ private:
 		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
 			_clear_read();
 			auto& header = *_read_header.template get<index>(ec);
-			TERRAQTT_LOG(TRACE, "SUBACK: Received {} retrun codes for packet={}", header.return_codes.size(),
-			             header.packet_identifier);
 			if (!ec) {
+				TERRAQTT_LOG(DEBUG, "SUBACK: Received {} return codes for packet={}",
+				             header.return_codes.size(), header.packet_identifier);
 				on_suback(ec, header);
 			}
 		}
 	}
 	void _handle_unsuback(std::error_code& ec)
 	{
+		TERRAQTT_LOG(TRACE, "Handling UNSUBACK packet");
 		constexpr auto index = 7;
 		if (!_read_context.sequence) {
 			_read_header.template emplace<index>();
@@ -518,13 +521,14 @@ private:
 			_clear_read();
 			auto& header = *_read_header.template get<index>(ec);
 			if (!ec) {
+				TERRAQTT_LOG(DEBUG, "Received UNSUBACK packet");
 				on_unsuback(ec, header);
 			}
 		}
 	}
 	void _handle_pingresp(std::error_code& ec)
 	{
-		TERRAQTT_LOG(TRACE, "Handling PINGRESP");
+		TERRAQTT_LOG(TRACE, "Handling PINGRESP packet");
 		constexpr auto index = 8;
 		if (!_read_context.sequence) {
 			_read_header.template emplace<index>();
@@ -533,9 +537,9 @@ private:
 		if (protocol::read_packet(*_input, ec, _read_context, *_read_header.template get<index>(ec)) && !ec) {
 			_clear_read();
 			auto& header = *_read_header.template get<index>(ec);
-			TERRAQTT_LOG(DEBUG, "Received full PINGRESP packet");
-			keep_alive.complete();
 			if (!ec) {
+				TERRAQTT_LOG(DEBUG, "Received PINGRESP packet");
+				keep_alive.complete();
 				on_pingresp(ec, header);
 			}
 		}

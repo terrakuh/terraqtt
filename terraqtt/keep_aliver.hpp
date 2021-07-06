@@ -48,12 +48,13 @@ public:
 	/// Checks whether a ping operation is required to keep the connection alive.
 	bool needs_ping() const noexcept
 	{
-		return Clock::now() >= _next_ping;
+		return _timeout != Seconds{ 0 } && Clock::now() >= _next_ping;
 	}
 	/// Checks whether the timeout has expired.
 	bool timed_out() const noexcept
 	{
-		return _ping_timeout != typename Clock::time_point{} && _ping_timeout < Clock::now();
+		return _timeout != Seconds{ 0 } && _ping_timeout != typename Clock::time_point{} &&
+		       _ping_timeout < Clock::now();
 	}
 
 private:

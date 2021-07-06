@@ -46,23 +46,29 @@ inline typename std::enable_if<(std::is_trivial<Type>::value && sizeof(Type) == 
 template<typename Input>
 inline bool read_element(Input& input, std::error_code& ec, Read_context& context, std::uint16_t& out)
 {
-	if (context.available < 2) {
+	if (context.available == 0) {
 		return false;
-	} else if (context.remaining_size < 2) {
+	} else if (context.remaining_size < 2 - context.sequence_data[0]) {
 		ec = Error::bad_remaining_size;
 		return false;
 	}
 
-	typename Input::char_type buffer[2];
-	input.read(buffer, sizeof(buffer));
+	const auto buffer = reinterpret_cast<typename Input::char_type*>(context.sequence_data + 1);
+	const auto n      = std::min<std::streamsize>(2 - context.sequence_data[0], context.available);
+	input.read(buffer + context.sequence_data[0], n);
+	context.available -= n;
+	context.remaining_size -= n;
+	context.sequence_data[0] += n;
 	if (!input) {
 		ec = std::make_error_code(std::errc::io_error);
 		return false;
+	} else if (context.sequence_data[0] != 2) {
+		return false;
 	}
 
-	out = buffer[0] << 8 | buffer[1];
-	context.available -= 2;
-	context.remaining_size -= 2;
+	out                      = buffer[0] << 8 | buffer[1];
+	context.sequence_data[0] = 0;
+	context.sequence_data[1] = 0;
 	++context.sequence;
 	return true;
 }

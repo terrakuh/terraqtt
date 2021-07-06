@@ -7,6 +7,7 @@ project(terraqtt
 set(CMAKE_CXX_STANDARD 11)
 
 option(TERRAQTT_BUILD_EXAMPLES "Build some example projects." ON)
+option(TERRAQTT_TEST_ENABLE "Enables test building." OFF)
 option(TERRAQTT_LOG_ENABLE "Enables logging output." OFF)
 set(TERRAQTT_LOG_LEVEL "INFO" CACHE STRING "The logging level (CIRITICAL, ERROR, WARN, INFO, DEBUG, TRACE)")
 set_property(CACHE TERRAQTT_LOG_LEVEL PROPERTY STRINGS "CRITICAL" "ERROR" "WARN" "INFO" "DEBUG" "TRACE")
@@ -19,6 +20,10 @@ target_include_directories(${PROJECT_NAME} INTERFACE "$<BUILD_INTERFACE:${CMAKE_
 
 if(TERRAQTT_BUILD_EXAMPLES)
 	add_subdirectory(examples)
+endif()
+
+if(TERRAQTT_TEST_ENABLE)
+	add_subdirectory(tests)
 endif()
 
 if(TERRAQTT_LOG_ENABLE)
