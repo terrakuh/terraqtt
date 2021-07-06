@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['keep_5falive_68',['keep_alive',['../d1/d38/structterraqtt_1_1protocol_1_1_connect__header.html#ad9b526481d033fd7518c56c8ff2b6ddc',1,'terraqtt::protocol::Connect_header']]]
+  ['available_72',['available',['../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a7b9ff0876f1e258bc122b3bfc5c3e90e',1,'terraqtt::protocol::Read_context']]]
 ];

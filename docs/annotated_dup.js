@@ -26,7 +26,6 @@ var annotated_dup =
         [ "Unsubscribe_header", "d9/d3b/structterraqtt_1_1protocol_1_1_unsubscribe__header.html", "d9/d3b/structterraqtt_1_1protocol_1_1_unsubscribe__header" ]
       ] ],
       [ "Basic_client", "d2/d41/classterraqtt_1_1_basic__client.html", "d2/d41/classterraqtt_1_1_basic__client" ],
-      [ "Null_mutex", "da/d20/classterraqtt_1_1_null__mutex.html", "da/d20/classterraqtt_1_1_null__mutex" ],
       [ "Static_container", "dd/d37/classterraqtt_1_1_static__container.html", "dd/d37/classterraqtt_1_1_static__container" ],
       [ "String_view", "db/dd3/classterraqtt_1_1_string__view.html", "db/dd3/classterraqtt_1_1_string__view" ],
       [ "Subscribe_topic", "dc/d55/structterraqtt_1_1_subscribe__topic.html", "dc/d55/structterraqtt_1_1_subscribe__topic" ]

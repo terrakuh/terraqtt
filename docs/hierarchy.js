@@ -1,10 +1,9 @@
 var hierarchy =
 [
-    [ "terraqtt::Basic_client< Input, Output, String, Return_code_container, Mutex, Clock >", "d2/d41/classterraqtt_1_1_basic__client.html", null ],
+    [ "terraqtt::Basic_client< Input, Output, String, Return_code_container, Clock >", "d2/d41/classterraqtt_1_1_basic__client.html", null ],
     [ "terraqtt::protocol::Connack_header", "d6/ddd/structterraqtt_1_1protocol_1_1_connack__header.html", null ],
     [ "terraqtt::protocol::Connect_header< String, Will_message, Password >", "d1/d38/structterraqtt_1_1protocol_1_1_connect__header.html", null ],
     [ "terraqtt::protocol::Disconnect_header", "d8/df8/structterraqtt_1_1protocol_1_1_disconnect__header.html", null ],
-    [ "terraqtt::Null_mutex", "da/d20/classterraqtt_1_1_null__mutex.html", null ],
     [ "terraqtt::protocol::Pingreq_header", "d0/de7/structterraqtt_1_1protocol_1_1_pingreq__header.html", null ],
     [ "terraqtt::protocol::Pingresp_header", "d9/d23/structterraqtt_1_1protocol_1_1_pingresp__header.html", null ],
     [ "terraqtt::protocol::Puback_header", "dc/d65/structterraqtt_1_1protocol_1_1_puback__header.html", null ],

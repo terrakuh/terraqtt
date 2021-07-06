@@ -1,0 +1,12 @@
+[
+{
+  "directory": "/home/yunus/Projects/terraqtt/build/examples",
+  "command": "/bin/clang++-11  -DBOOST_ALL_NO_LIB -DBOOST_SYSTEM_DYN_LINK -DSPDLOG_COMPILED_LIB -I/home/yunus/Projects/terraqtt  -g   -std=gnu++11 -o CMakeFiles/lightweight.dir/lightweight.cpp.o -c /home/yunus/Projects/terraqtt/examples/lightweight.cpp",
+  "file": "/home/yunus/Projects/terraqtt/examples/lightweight.cpp"
+},
+{
+  "directory": "/home/yunus/Projects/terraqtt/build/tests",
+  "command": "/bin/clang++-11  -DSPDLOG_COMPILED_LIB -I/home/yunus/Projects/terraqtt  -g   -std=gnu++11 -o CMakeFiles/test.dir/basic.cpp.o -c /home/yunus/Projects/terraqtt/tests/basic.cpp",
+  "file": "/home/yunus/Projects/terraqtt/tests/basic.cpp"
+}
+]

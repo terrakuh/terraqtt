@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.17"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>terraqtt: terraqtt::Basic_client&lt; Input, Output, String, Return_code_container, Mutex, Clock &gt; Class Template Reference</title>
+<title>terraqtt: terraqtt::Basic_client&lt; Input, Output, String, Return_code_container, Clock &gt; Class Template Reference</title>
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
@@ -85,9 +85,10 @@ $(document).ready(function(){initNavTree('d2/d41/classterraqtt_1_1_basic__client
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pro-methods">Protected Member Functions</a> &#124;
+<a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="../../dd/db3/classterraqtt_1_1_basic__client-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">terraqtt::Basic_client&lt; Input, Output, String, Return_code_container, Mutex, Clock &gt; Class Template Reference</div>  </div>
+<div class="title">terraqtt::Basic_client&lt; Input, Output, String, Return_code_container, Clock &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
@@ -98,90 +99,97 @@ $(document).ready(function(){initNavTree('d2/d41/classterraqtt_1_1_basic__client
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a21e05704c26de576cb6a5cf45b299780"><td class="memItemLeft" align="right" valign="top"><a id="a21e05704c26de576cb6a5cf45b299780"></a>
+<tr class="memitem:a0a154eff116ef97274411ec96b76b99b"><td class="memItemLeft" align="right" valign="top"><a id="a0a154eff116ef97274411ec96b76b99b"></a>
 typedef String&#160;</td><td class="memItemRight" valign="bottom"><b>String_type</b></td></tr>
-<tr class="separator:a21e05704c26de576cb6a5cf45b299780"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a196dda758ab98e64850c7eed5b856022"><td class="memItemLeft" align="right" valign="top"><a id="a196dda758ab98e64850c7eed5b856022"></a>
+<tr class="separator:a0a154eff116ef97274411ec96b76b99b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adff8ea9475c9b69a217a3f537e001812"><td class="memItemLeft" align="right" valign="top"><a id="adff8ea9475c9b69a217a3f537e001812"></a>
 typedef Return_code_container&#160;</td><td class="memItemRight" valign="bottom"><b>Return_code_container_type</b></td></tr>
-<tr class="separator:a196dda758ab98e64850c7eed5b856022"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:adff8ea9475c9b69a217a3f537e001812"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a33d9f006b5552a8fc4afdf82c6a16386"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#a33d9f006b5552a8fc4afdf82c6a16386">Basic_client</a> (Input &amp;input, Output &amp;output) noexcept</td></tr>
-<tr class="memdesc:a33d9f006b5552a8fc4afdf82c6a16386"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#a33d9f006b5552a8fc4afdf82c6a16386">More...</a><br /></td></tr>
-<tr class="separator:a33d9f006b5552a8fc4afdf82c6a16386"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a565a52737c3d94932763bc90e703a78d"><td class="memItemLeft" align="right" valign="top"><a id="a565a52737c3d94932763bc90e703a78d"></a>
-virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#a565a52737c3d94932763bc90e703a78d">~Basic_client</a> () noexcept</td></tr>
-<tr class="memdesc:a565a52737c3d94932763bc90e703a78d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor. Automatically disconnects from the server without waiting for the response. <br /></td></tr>
-<tr class="separator:a565a52737c3d94932763bc90e703a78d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a04ac298943327b9901ee10a136a1c855"><td class="memTemplParams" colspan="2">template&lt;typename Identifier &gt; </td></tr>
-<tr class="memitem:a04ac298943327b9901ee10a136a1c855"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#a04ac298943327b9901ee10a136a1c855">connect</a> (std::error_code &amp;ec, const Identifier &amp;identifier, bool clean_session=true, Seconds keep_alive=Seconds{ 0 })</td></tr>
-<tr class="memdesc:a04ac298943327b9901ee10a136a1c855"><td class="mdescLeft">&#160;</td><td class="mdescRight">Connects to the MQTT broker.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#a04ac298943327b9901ee10a136a1c855">More...</a><br /></td></tr>
-<tr class="separator:a04ac298943327b9901ee10a136a1c855"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a05f8a15295c22483c698e29624c9719d"><td class="memItemLeft" align="right" valign="top"><a id="a05f8a15295c22483c698e29624c9719d"></a>
+<tr class="memitem:aaed3acb5a5d1e963528cc508834990ab"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#aaed3acb5a5d1e963528cc508834990ab">Basic_client</a> (Input &amp;input, Output &amp;output) noexcept</td></tr>
+<tr class="memdesc:aaed3acb5a5d1e963528cc508834990ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#aaed3acb5a5d1e963528cc508834990ab">More...</a><br /></td></tr>
+<tr class="separator:aaed3acb5a5d1e963528cc508834990ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7b34089e1bb601c4155d3fd1fcdc956d"><td class="memItemLeft" align="right" valign="top"><a id="a7b34089e1bb601c4155d3fd1fcdc956d"></a>
+virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#a7b34089e1bb601c4155d3fd1fcdc956d">~Basic_client</a> () noexcept</td></tr>
+<tr class="memdesc:a7b34089e1bb601c4155d3fd1fcdc956d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor. Automatically disconnects from the server without waiting for the response. <br /></td></tr>
+<tr class="separator:a7b34089e1bb601c4155d3fd1fcdc956d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec68f55cea76fc8947b837281010e38d"><td class="memTemplParams" colspan="2">template&lt;typename Identifier &gt; </td></tr>
+<tr class="memitem:aec68f55cea76fc8947b837281010e38d"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#aec68f55cea76fc8947b837281010e38d">connect</a> (std::error_code &amp;ec, const Identifier &amp;identifier, bool clean_session=true, Seconds <a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#a17dda07a6a3ca18ce7a172520adbd589">keep_alive</a>=Seconds{ 0 })</td></tr>
+<tr class="memdesc:aec68f55cea76fc8947b837281010e38d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Connects to the MQTT broker.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#aec68f55cea76fc8947b837281010e38d">More...</a><br /></td></tr>
+<tr class="separator:aec68f55cea76fc8947b837281010e38d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f464263f740ca51a38464eab718b4d2"><td class="memItemLeft" align="right" valign="top"><a id="a2f464263f740ca51a38464eab718b4d2"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>disconnect</b> (std::error_code &amp;ec)</td></tr>
-<tr class="separator:a05f8a15295c22483c698e29624c9719d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a392cdf944b7b8f6613071a86b2eb0895"><td class="memTemplParams" colspan="2">template&lt;typename Topic , typename Payload &gt; </td></tr>
-<tr class="memitem:a392cdf944b7b8f6613071a86b2eb0895"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#a392cdf944b7b8f6613071a86b2eb0895">publish</a> (std::error_code &amp;ec, const Topic &amp;topic, const Payload &amp;payload, std::uint16_t packet_id=0, QoS qos=QoS::at_most_once, bool retain=false)</td></tr>
-<tr class="memdesc:a392cdf944b7b8f6613071a86b2eb0895"><td class="mdescLeft">&#160;</td><td class="mdescRight">Publishes the payload to the topic.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#a392cdf944b7b8f6613071a86b2eb0895">More...</a><br /></td></tr>
-<tr class="separator:a392cdf944b7b8f6613071a86b2eb0895"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8a150a5d7281f3abb0e86aab90009bbe"><td class="memTemplParams" colspan="2">template&lt;typename Topic &gt; </td></tr>
-<tr class="memitem:a8a150a5d7281f3abb0e86aab90009bbe"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#a8a150a5d7281f3abb0e86aab90009bbe">subscribe</a> (std::error_code &amp;ec, std::initializer_list&lt; Topic &gt; topics, std::uint16_t packet_id)</td></tr>
-<tr class="memdesc:a8a150a5d7281f3abb0e86aab90009bbe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Subscribes to one or more topics.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#a8a150a5d7281f3abb0e86aab90009bbe">More...</a><br /></td></tr>
-<tr class="separator:a8a150a5d7281f3abb0e86aab90009bbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aee61b65fdb8a72552e921eb240da869f"><td class="memTemplParams" colspan="2">template&lt;typename Topic &gt; </td></tr>
-<tr class="memitem:aee61b65fdb8a72552e921eb240da869f"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#aee61b65fdb8a72552e921eb240da869f">unsubscribe</a> (std::error_code &amp;ec, std::initializer_list&lt; Topic &gt; topics, std::uint16_t packet_id)</td></tr>
-<tr class="memdesc:aee61b65fdb8a72552e921eb240da869f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unsubscribes from one or more topics.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#aee61b65fdb8a72552e921eb240da869f">More...</a><br /></td></tr>
-<tr class="separator:aee61b65fdb8a72552e921eb240da869f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44f2c5b1a61466e77352fe32b116a91a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#a44f2c5b1a61466e77352fe32b116a91a">ping</a> (std::error_code &amp;ec)</td></tr>
-<tr class="memdesc:a44f2c5b1a61466e77352fe32b116a91a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sends a ping request to broker.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#a44f2c5b1a61466e77352fe32b116a91a">More...</a><br /></td></tr>
-<tr class="separator:a44f2c5b1a61466e77352fe32b116a91a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:add12b696fbe2f037f9b1d6f39aa06fb6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#add12b696fbe2f037f9b1d6f39aa06fb6">update_state</a> (std::error_code &amp;ec)</td></tr>
-<tr class="memdesc:add12b696fbe2f037f9b1d6f39aa06fb6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the keep alive state.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#add12b696fbe2f037f9b1d6f39aa06fb6">More...</a><br /></td></tr>
-<tr class="separator:add12b696fbe2f037f9b1d6f39aa06fb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae31c58ef5d18051c276bb2bbfde980e7"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#ae31c58ef5d18051c276bb2bbfde980e7">process_one</a> (std::error_code &amp;ec, std::size_t available=std::numeric_limits&lt; std::size_t &gt;::max())</td></tr>
-<tr class="memdesc:ae31c58ef5d18051c276bb2bbfde980e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Processes up to <code>available</code> bytes.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#ae31c58ef5d18051c276bb2bbfde980e7">More...</a><br /></td></tr>
-<tr class="separator:ae31c58ef5d18051c276bb2bbfde980e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7eae560f7cd0cfca2d5515b8c161ced1"><td class="memItemLeft" align="right" valign="top"><a id="a7eae560f7cd0cfca2d5515b8c161ced1"></a>
+<tr class="separator:a2f464263f740ca51a38464eab718b4d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab0d0b6e6abc0592f1a68870826411fb6"><td class="memTemplParams" colspan="2">template&lt;typename Topic , typename Payload &gt; </td></tr>
+<tr class="memitem:ab0d0b6e6abc0592f1a68870826411fb6"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#ab0d0b6e6abc0592f1a68870826411fb6">publish</a> (std::error_code &amp;ec, const Topic &amp;topic, const Payload &amp;payload, std::uint16_t packet_id=0, QoS qos=QoS::at_most_once, bool retain=false)</td></tr>
+<tr class="memdesc:ab0d0b6e6abc0592f1a68870826411fb6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Publishes the payload to the topic.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#ab0d0b6e6abc0592f1a68870826411fb6">More...</a><br /></td></tr>
+<tr class="separator:ab0d0b6e6abc0592f1a68870826411fb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af52b7909a97f6b91377eea065bc8d0c8"><td class="memTemplParams" colspan="2">template&lt;typename Topic &gt; </td></tr>
+<tr class="memitem:af52b7909a97f6b91377eea065bc8d0c8"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#af52b7909a97f6b91377eea065bc8d0c8">subscribe</a> (std::error_code &amp;ec, std::initializer_list&lt; Topic &gt; topics, std::uint16_t packet_id)</td></tr>
+<tr class="memdesc:af52b7909a97f6b91377eea065bc8d0c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Subscribes to one or more topics.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#af52b7909a97f6b91377eea065bc8d0c8">More...</a><br /></td></tr>
+<tr class="separator:af52b7909a97f6b91377eea065bc8d0c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d9bc680bf8162fb2026985450f3ae22"><td class="memTemplParams" colspan="2">template&lt;typename Topic &gt; </td></tr>
+<tr class="memitem:a9d9bc680bf8162fb2026985450f3ae22"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#a9d9bc680bf8162fb2026985450f3ae22">unsubscribe</a> (std::error_code &amp;ec, std::initializer_list&lt; Topic &gt; topics, std::uint16_t packet_id)</td></tr>
+<tr class="memdesc:a9d9bc680bf8162fb2026985450f3ae22"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unsubscribes from one or more topics.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#a9d9bc680bf8162fb2026985450f3ae22">More...</a><br /></td></tr>
+<tr class="separator:a9d9bc680bf8162fb2026985450f3ae22"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47b6d789a05a08266a75d7e5a9b5adba"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#a47b6d789a05a08266a75d7e5a9b5adba">ping</a> (std::error_code &amp;ec)</td></tr>
+<tr class="memdesc:a47b6d789a05a08266a75d7e5a9b5adba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sends a ping request to broker.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#a47b6d789a05a08266a75d7e5a9b5adba">More...</a><br /></td></tr>
+<tr class="separator:a47b6d789a05a08266a75d7e5a9b5adba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b9d2ab0f22aeea21ed659616804726d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#a1b9d2ab0f22aeea21ed659616804726d">update_state</a> (std::error_code &amp;ec)</td></tr>
+<tr class="memdesc:a1b9d2ab0f22aeea21ed659616804726d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the keep alive state.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#a1b9d2ab0f22aeea21ed659616804726d">More...</a><br /></td></tr>
+<tr class="separator:a1b9d2ab0f22aeea21ed659616804726d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa8c8dd7cb20bfac3c8953f258f46d430"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#aa8c8dd7cb20bfac3c8953f258f46d430">process_one</a> (std::error_code &amp;ec, std::size_t available=std::numeric_limits&lt; std::size_t &gt;::max())</td></tr>
+<tr class="memdesc:aa8c8dd7cb20bfac3c8953f258f46d430"><td class="mdescLeft">&#160;</td><td class="mdescRight">Processes up to <code>available</code> bytes.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#aa8c8dd7cb20bfac3c8953f258f46d430">More...</a><br /></td></tr>
+<tr class="separator:aa8c8dd7cb20bfac3c8953f258f46d430"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad8ed12ae1b84c3f7186b6fc7981297e8"><td class="memItemLeft" align="right" valign="top"><a id="ad8ed12ae1b84c3f7186b6fc7981297e8"></a>
 Input *&#160;</td><td class="memItemRight" valign="bottom"><b>input</b> () noexcept</td></tr>
-<tr class="separator:a7eae560f7cd0cfca2d5515b8c161ced1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8d78636caed2140339ecc21bf90aa560"><td class="memItemLeft" align="right" valign="top"><a id="a8d78636caed2140339ecc21bf90aa560"></a>
+<tr class="separator:ad8ed12ae1b84c3f7186b6fc7981297e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a29ccf3c5f85bf20129517bb8ea5670fe"><td class="memItemLeft" align="right" valign="top"><a id="a29ccf3c5f85bf20129517bb8ea5670fe"></a>
 Output *&#160;</td><td class="memItemRight" valign="bottom"><b>output</b> () noexcept</td></tr>
-<tr class="separator:a8d78636caed2140339ecc21bf90aa560"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a29ccf3c5f85bf20129517bb8ea5670fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr class="memitem:a0387c1d665799f4515a6fc0e84d77fbc"><td class="memItemLeft" align="right" valign="top"><a id="a0387c1d665799f4515a6fc0e84d77fbc"></a>
+<tr class="memitem:a1a7709082799115f61f6e89caee078f8"><td class="memItemLeft" align="right" valign="top"><a id="a1a7709082799115f61f6e89caee078f8"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>on_connack</b> (std::error_code &amp;ec, const <a class="el" href="../../d6/ddd/structterraqtt_1_1protocol_1_1_connack__header.html">protocol::Connack_header</a> &amp;header)</td></tr>
-<tr class="separator:a0387c1d665799f4515a6fc0e84d77fbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2026b89990d668eb4a3eaac03e4ead0f"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#a2026b89990d668eb4a3eaac03e4ead0f">on_publish</a> (std::error_code &amp;ec, const <a class="el" href="../../db/d51/structterraqtt_1_1protocol_1_1_publish__header.html">protocol::Publish_header</a>&lt; String_type &gt; &amp;header, std::istream &amp;payload, std::size_t payload_size)</td></tr>
-<tr class="memdesc:a2026b89990d668eb4a3eaac03e4ead0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when the broker published something to a subscribed topic.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#a2026b89990d668eb4a3eaac03e4ead0f">More...</a><br /></td></tr>
-<tr class="separator:a2026b89990d668eb4a3eaac03e4ead0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a688de307d8e1422173a1a16ecbe5351c"><td class="memItemLeft" align="right" valign="top"><a id="a688de307d8e1422173a1a16ecbe5351c"></a>
+<tr class="separator:a1a7709082799115f61f6e89caee078f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae457508b61629c3455321b59aa63ed93"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#ae457508b61629c3455321b59aa63ed93">on_publish</a> (std::error_code &amp;ec, const <a class="el" href="../../db/d51/structterraqtt_1_1protocol_1_1_publish__header.html">protocol::Publish_header</a>&lt; String_type &gt; &amp;header, std::istream &amp;payload, std::size_t payload_size)</td></tr>
+<tr class="memdesc:ae457508b61629c3455321b59aa63ed93"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when the broker published something to a subscribed topic.  <a href="../../d2/d41/classterraqtt_1_1_basic__client.html#ae457508b61629c3455321b59aa63ed93">More...</a><br /></td></tr>
+<tr class="separator:ae457508b61629c3455321b59aa63ed93"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4efe65883c134adce300447f1548f5aa"><td class="memItemLeft" align="right" valign="top"><a id="a4efe65883c134adce300447f1548f5aa"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>on_puback</b> (std::error_code &amp;ec, const <a class="el" href="../../dc/d65/structterraqtt_1_1protocol_1_1_puback__header.html">protocol::Puback_header</a> &amp;header)</td></tr>
-<tr class="separator:a688de307d8e1422173a1a16ecbe5351c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6d647ed51837cea3ac7c1dd65c869b0f"><td class="memItemLeft" align="right" valign="top"><a id="a6d647ed51837cea3ac7c1dd65c869b0f"></a>
+<tr class="separator:a4efe65883c134adce300447f1548f5aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a966ab85c225aaa0318c947ed05fdba5a"><td class="memItemLeft" align="right" valign="top"><a id="a966ab85c225aaa0318c947ed05fdba5a"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>on_pubrec</b> (std::error_code &amp;ec, const <a class="el" href="../../de/d56/structterraqtt_1_1protocol_1_1_pubrec__header.html">protocol::Pubrec_header</a> &amp;header)</td></tr>
-<tr class="separator:a6d647ed51837cea3ac7c1dd65c869b0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aed7736a935365fc04354286c9c50d7e4"><td class="memItemLeft" align="right" valign="top"><a id="aed7736a935365fc04354286c9c50d7e4"></a>
+<tr class="separator:a966ab85c225aaa0318c947ed05fdba5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06c6269dea5c735796634b8986402e7e"><td class="memItemLeft" align="right" valign="top"><a id="a06c6269dea5c735796634b8986402e7e"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>on_pubrel</b> (std::error_code &amp;ec, const <a class="el" href="../../de/d11/structterraqtt_1_1protocol_1_1pubrel__header.html">protocol::pubrel_header</a> &amp;header)</td></tr>
-<tr class="separator:aed7736a935365fc04354286c9c50d7e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9e5437bda30df1d89f53c597428d028d"><td class="memItemLeft" align="right" valign="top"><a id="a9e5437bda30df1d89f53c597428d028d"></a>
+<tr class="separator:a06c6269dea5c735796634b8986402e7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b98bc9b11365162a35ff81627a566bc"><td class="memItemLeft" align="right" valign="top"><a id="a9b98bc9b11365162a35ff81627a566bc"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>on_pubcomp</b> (std::error_code &amp;ec, const <a class="el" href="../../d7/da7/structterraqtt_1_1protocol_1_1_pubcomp__header.html">protocol::Pubcomp_header</a> &amp;header)</td></tr>
-<tr class="separator:a9e5437bda30df1d89f53c597428d028d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae729da89d3a3dfe84923d6ec6afb846a"><td class="memItemLeft" align="right" valign="top"><a id="ae729da89d3a3dfe84923d6ec6afb846a"></a>
+<tr class="separator:a9b98bc9b11365162a35ff81627a566bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a41d0c8f5593e09e44a8e7faa357950a0"><td class="memItemLeft" align="right" valign="top"><a id="a41d0c8f5593e09e44a8e7faa357950a0"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>on_suback</b> (std::error_code &amp;ec, const <a class="el" href="../../d7/d13/structterraqtt_1_1protocol_1_1_suback__header.html">protocol::Suback_header</a>&lt; Return_code_container_type &gt; &amp;header)</td></tr>
-<tr class="separator:ae729da89d3a3dfe84923d6ec6afb846a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaa715f07689a7b44f344280605388bb6"><td class="memItemLeft" align="right" valign="top"><a id="aaa715f07689a7b44f344280605388bb6"></a>
+<tr class="separator:a41d0c8f5593e09e44a8e7faa357950a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a22f51940756ba0387700c59a428e3e6f"><td class="memItemLeft" align="right" valign="top"><a id="a22f51940756ba0387700c59a428e3e6f"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>on_unsuback</b> (std::error_code &amp;ec, const <a class="el" href="../../d2/d04/structterraqtt_1_1protocol_1_1_unsuback__header.html">protocol::Unsuback_header</a> &amp;header)</td></tr>
-<tr class="separator:aaa715f07689a7b44f344280605388bb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5202f1df8c285fd7e82d25af4fe376ad"><td class="memItemLeft" align="right" valign="top"><a id="a5202f1df8c285fd7e82d25af4fe376ad"></a>
+<tr class="separator:a22f51940756ba0387700c59a428e3e6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a73323f8606384702e42b3d5f4656eb51"><td class="memItemLeft" align="right" valign="top"><a id="a73323f8606384702e42b3d5f4656eb51"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>on_pingresp</b> (std::error_code &amp;ec, const <a class="el" href="../../d9/d23/structterraqtt_1_1protocol_1_1_pingresp__header.html">protocol::Pingresp_header</a> &amp;header)</td></tr>
-<tr class="separator:a5202f1df8c285fd7e82d25af4fe376ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a73323f8606384702e42b3d5f4656eb51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
+Protected Attributes</h2></td></tr>
+<tr class="memitem:a17dda07a6a3ca18ce7a172520adbd589"><td class="memItemLeft" align="right" valign="top"><a id="a17dda07a6a3ca18ce7a172520adbd589"></a>
+Keep_aliver&lt; Clock &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html#a17dda07a6a3ca18ce7a172520adbd589">keep_alive</a></td></tr>
+<tr class="memdesc:a17dda07a6a3ca18ce7a172520adbd589"><td class="mdescLeft">&#160;</td><td class="mdescRight">This keeps track of the keep alive timeout. The timeout is reset after the client sends a packet. <br /></td></tr>
+<tr class="separator:a17dda07a6a3ca18ce7a172520adbd589"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename Input, typename Output, typename String, typename Return_code_container, typename Mutex, typename Clock&gt;<br />
-class terraqtt::Basic_client&lt; Input, Output, String, Return_code_container, Mutex, Clock &gt;</h3>
+<div class="textblock"><h3>template&lt;typename Input, typename Output, typename String, typename Return_code_container, typename Clock&gt;<br />
+class terraqtt::Basic_client&lt; Input, Output, String, Return_code_container, Clock &gt;</h3>
 
 <p>A basic MQTT client. </p>
 <div class="fragment"><div class="line"><span class="keyword">using namespace </span>terraqtt;</div>
@@ -189,13 +197,12 @@ class terraqtt::Basic_client&lt; Input, Output, String, Return_code_container, M
 <div class="line"><span class="keyword">typedef</span> <a class="code" href="../../d2/d41/classterraqtt_1_1_basic__client.html">Basic_client&lt;std::istream, std::ostream, std::string, std::vector&lt;protocol::Suback_return_code&gt;</a>,</div>
 <div class="line">                     std::mutex, std::chrono::steady_clock&gt; Easy_client;</div>
 </div><!-- fragment --><p> This class only provides the means to communicate with the broker and does not actually follow the semantics of the protocol like keeping track of packet ids, acknowledging messages or quality of service.</p>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="../../da/d20/classterraqtt_1_1_null__mutex.html" title="No operation mutex without any logic. Useful when the client runs in a single thread environment.">Null_mutex</a>, <a class="el" href="../../dd/d37/classterraqtt_1_1_static__container.html" title="Basic container that stores its element inside its own memory.">Static_container</a>, <a class="el" href="../../db/dd3/classterraqtt_1_1_string__view.html" title="A simple string container holding a single const char* and its length.">String_view</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd>Null_mutex, <a class="el" href="../../dd/d37/classterraqtt_1_1_static__container.html" title="Basic container that stores its element inside its own memory.">Static_container</a>, <a class="el" href="../../db/dd3/classterraqtt_1_1_string__view.html" title="A simple string container holding a single const char* and its length.">String_view</a> </dd></dl>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">Input</td><td>The input stream type. </td></tr>
     <tr><td class="paramname">Output</td><td>The output stream type. </td></tr>
     <tr><td class="paramname">String</td><td>In what container strings like topics should be stored. Must statisfy the <a href="https://en.cppreference.com/w/cpp/named_req/Container">Container</a> requirements. </td></tr>
-    <tr><td class="paramname">Mutex</td><td>A mutex type used for synchronization. Must satisfy the <a href="https://en.cppreference.com/w/cpp/named_req/BasicLockable">BasicLockable</a> requirements. </td></tr>
     <tr><td class="paramname">Clock</td><td>The clock used for timing purposes like keep alive. Must statisfy the <a href="https://en.cppreference.com/w/cpp/named_req/Clock">Clock</a> requirements. </td></tr>
   </table>
   </dd>
@@ -203,19 +210,19 @@ class terraqtt::Basic_client&lt; Input, Output, String, Return_code_container, M
 <dl class="section examples"><dt>Examples</dt><dd><a class="el" href="../../d8/ddf/lightweight_8cpp-example.html#_a0">lightweight.cpp</a>.</dd>
 </dl>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a33d9f006b5552a8fc4afdf82c6a16386"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a33d9f006b5552a8fc4afdf82c6a16386">&#9670;&nbsp;</a></span>Basic_client()</h2>
+<a id="aaed3acb5a5d1e963528cc508834990ab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaed3acb5a5d1e963528cc508834990ab">&#9670;&nbsp;</a></span>Basic_client()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Mutex , typename Clock &gt; </div>
+template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Clock &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Mutex, Clock &gt;::<a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">Basic_client</a> </td>
+          <td class="memname"><a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Clock &gt;::<a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">Basic_client</a> </td>
           <td>(</td>
           <td class="paramtype">Input &amp;&#160;</td>
           <td class="paramname"><em>input</em>, </td>
@@ -251,13 +258,13 @@ template&lt;typename Input , typename Output , typename String , typename Return
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a04ac298943327b9901ee10a136a1c855"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a04ac298943327b9901ee10a136a1c855">&#9670;&nbsp;</a></span>connect()</h2>
+<a id="aec68f55cea76fc8947b837281010e38d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aec68f55cea76fc8947b837281010e38d">&#9670;&nbsp;</a></span>connect()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Mutex , typename Clock &gt; </div>
+template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Clock &gt; </div>
 <div class="memtemplate">
 template&lt;typename Identifier &gt; </div>
 <table class="mlabels">
@@ -265,7 +272,7 @@ template&lt;typename Identifier &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Mutex, Clock &gt;::connect </td>
+          <td class="memname">void <a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Clock &gt;::connect </td>
           <td>(</td>
           <td class="paramtype">std::error_code &amp;&#160;</td>
           <td class="paramname"><em>ec</em>, </td>
@@ -314,19 +321,19 @@ template&lt;typename Identifier &gt; </div>
 
 </div>
 </div>
-<a id="a2026b89990d668eb4a3eaac03e4ead0f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2026b89990d668eb4a3eaac03e4ead0f">&#9670;&nbsp;</a></span>on_publish()</h2>
+<a id="ae457508b61629c3455321b59aa63ed93"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae457508b61629c3455321b59aa63ed93">&#9670;&nbsp;</a></span>on_publish()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Mutex , typename Clock &gt; </div>
+template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Clock &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual void <a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Mutex, Clock &gt;::on_publish </td>
+          <td class="memname">virtual void <a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Clock &gt;::on_publish </td>
           <td>(</td>
           <td class="paramtype">std::error_code &amp;&#160;</td>
           <td class="paramname"><em>ec</em>, </td>
@@ -376,19 +383,19 @@ template&lt;typename Input , typename Output , typename String , typename Return
 
 </div>
 </div>
-<a id="a44f2c5b1a61466e77352fe32b116a91a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a44f2c5b1a61466e77352fe32b116a91a">&#9670;&nbsp;</a></span>ping()</h2>
+<a id="a47b6d789a05a08266a75d7e5a9b5adba"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a47b6d789a05a08266a75d7e5a9b5adba">&#9670;&nbsp;</a></span>ping()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Mutex , typename Clock &gt; </div>
+template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Clock &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Mutex, Clock &gt;::ping </td>
+          <td class="memname">void <a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Clock &gt;::ping </td>
           <td>(</td>
           <td class="paramtype">std::error_code &amp;&#160;</td>
           <td class="paramname"><em>ec</em></td><td>)</td>
@@ -412,19 +419,19 @@ template&lt;typename Input , typename Output , typename String , typename Return
 
 </div>
 </div>
-<a id="ae31c58ef5d18051c276bb2bbfde980e7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae31c58ef5d18051c276bb2bbfde980e7">&#9670;&nbsp;</a></span>process_one()</h2>
+<a id="aa8c8dd7cb20bfac3c8953f258f46d430"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa8c8dd7cb20bfac3c8953f258f46d430">&#9670;&nbsp;</a></span>process_one()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Mutex , typename Clock &gt; </div>
+template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Clock &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::size_t <a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Mutex, Clock &gt;::process_one </td>
+          <td class="memname">std::size_t <a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Clock &gt;::process_one </td>
           <td>(</td>
           <td class="paramtype">std::error_code &amp;&#160;</td>
           <td class="paramname"><em>ec</em>, </td>
@@ -452,22 +459,22 @@ template&lt;typename Input , typename Output , typename String , typename Return
 <p>Can be used in a non-blocking fashion.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">ec</td><td>the error code, if any </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">available</td><td>the amount of bytes available to read </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">ec</td><td>The error code if any. </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">available</td><td>How many bytes can be read without blocking. If this value is larger than the actual input buffer size, this function will block until one packet has been processed. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the amount of bytes processed </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>How many bytes were processed. </dd></dl>
 
 </div>
 </div>
-<a id="a392cdf944b7b8f6613071a86b2eb0895"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a392cdf944b7b8f6613071a86b2eb0895">&#9670;&nbsp;</a></span>publish()</h2>
+<a id="ab0d0b6e6abc0592f1a68870826411fb6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab0d0b6e6abc0592f1a68870826411fb6">&#9670;&nbsp;</a></span>publish()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Mutex , typename Clock &gt; </div>
+template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Clock &gt; </div>
 <div class="memtemplate">
 template&lt;typename Topic , typename Payload &gt; </div>
 <table class="mlabels">
@@ -475,7 +482,7 @@ template&lt;typename Topic , typename Payload &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Mutex, Clock &gt;::publish </td>
+          <td class="memname">void <a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Clock &gt;::publish </td>
           <td>(</td>
           <td class="paramtype">std::error_code &amp;&#160;</td>
           <td class="paramname"><em>ec</em>, </td>
@@ -545,13 +552,13 @@ template&lt;typename Topic , typename Payload &gt; </div>
 
 </div>
 </div>
-<a id="a8a150a5d7281f3abb0e86aab90009bbe"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8a150a5d7281f3abb0e86aab90009bbe">&#9670;&nbsp;</a></span>subscribe()</h2>
+<a id="af52b7909a97f6b91377eea065bc8d0c8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af52b7909a97f6b91377eea065bc8d0c8">&#9670;&nbsp;</a></span>subscribe()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Mutex , typename Clock &gt; </div>
+template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Clock &gt; </div>
 <div class="memtemplate">
 template&lt;typename Topic &gt; </div>
 <table class="mlabels">
@@ -559,7 +566,7 @@ template&lt;typename Topic &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Mutex, Clock &gt;::subscribe </td>
+          <td class="memname">void <a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Clock &gt;::subscribe </td>
           <td>(</td>
           <td class="paramtype">std::error_code &amp;&#160;</td>
           <td class="paramname"><em>ec</em>, </td>
@@ -601,13 +608,13 @@ template&lt;typename Topic &gt; </div>
 
 </div>
 </div>
-<a id="aee61b65fdb8a72552e921eb240da869f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aee61b65fdb8a72552e921eb240da869f">&#9670;&nbsp;</a></span>unsubscribe()</h2>
+<a id="a9d9bc680bf8162fb2026985450f3ae22"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9d9bc680bf8162fb2026985450f3ae22">&#9670;&nbsp;</a></span>unsubscribe()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Mutex , typename Clock &gt; </div>
+template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Clock &gt; </div>
 <div class="memtemplate">
 template&lt;typename Topic &gt; </div>
 <table class="mlabels">
@@ -615,7 +622,7 @@ template&lt;typename Topic &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Mutex, Clock &gt;::unsubscribe </td>
+          <td class="memname">void <a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Clock &gt;::unsubscribe </td>
           <td>(</td>
           <td class="paramtype">std::error_code &amp;&#160;</td>
           <td class="paramname"><em>ec</em>, </td>
@@ -657,19 +664,19 @@ template&lt;typename Topic &gt; </div>
 
 </div>
 </div>
-<a id="add12b696fbe2f037f9b1d6f39aa06fb6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#add12b696fbe2f037f9b1d6f39aa06fb6">&#9670;&nbsp;</a></span>update_state()</h2>
+<a id="a1b9d2ab0f22aeea21ed659616804726d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1b9d2ab0f22aeea21ed659616804726d">&#9670;&nbsp;</a></span>update_state()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Mutex , typename Clock &gt; </div>
+template&lt;typename Input , typename Output , typename String , typename Return_code_container , typename Clock &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Mutex, Clock &gt;::update_state </td>
+          <td class="memname">void <a class="el" href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a>&lt; Input, Output, String, Return_code_container, Clock &gt;::update_state </td>
           <td>(</td>
           <td class="paramtype">std::error_code &amp;&#160;</td>
           <td class="paramname"><em>ec</em></td><td>)</td>
@@ -698,7 +705,7 @@ template&lt;typename Input , typename Output , typename String , typename Return
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
-<div class="ttc" id="aclassterraqtt_1_1_basic__client_html"><div class="ttname"><a href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a></div><div class="ttdoc">A basic MQTT client.</div><div class="ttdef"><b>Definition:</b> client.hpp:49</div></div>
+<div class="ttc" id="aclassterraqtt_1_1_basic__client_html"><div class="ttname"><a href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a></div><div class="ttdoc">A basic MQTT client.</div><div class="ttdef"><b>Definition:</b> client.hpp:46</div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>

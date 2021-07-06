@@ -134,50 +134,55 @@ $(document).ready(function(){initNavTree('d2/d30/general_8hpp_source.html','../.
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
 <div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html">   48</a></span>&#160;<span class="keyword">struct </span><a class="code" href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html">Read_context</a></div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;{</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    std::size_t available = 0;</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    std::uint8_t sequence = 0;</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    std::uint32_t sequence_data[2]{};</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    Variable_integer_type remaining_size = 5;</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="keywordtype">void</span> clear() noexcept</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    {</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        <span class="keyword">const</span> <span class="keyword">auto</span> tmp = available;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        *<span class="keyword">this</span>          = {};</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        available      = tmp;</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    }</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;};</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160; </div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">typename</span> Element&gt;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;constexpr std::size_t elements_max_size() noexcept</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;{</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">sizeof</span>(<span class="keyword">typename</span> std::decay&lt;Element&gt;::type);</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;}</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160; </div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">typename</span> Element, <span class="keyword">typename</span>... Elements&gt;</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;constexpr <span class="keyword">typename</span> std::enable_if&lt;(<span class="keyword">sizeof</span>...(Elements) &gt; 0), std::size_t&gt;::type elements_max_size() noexcept</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;{</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <span class="keywordflow">return</span> elements_max_size&lt;Element&gt;() + elements_max_size&lt;Elements...&gt;();</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;}</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">typename</span> Left, <span class="keyword">typename</span> Right&gt;</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">bool</span> protected_add(Left&amp; left, Right right) noexcept</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;{</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    static_assert(std::is_unsigned&lt;Left&gt;::value &amp;&amp; std::is_unsigned&lt;Right&gt;::value, <span class="stringliteral">&quot;must be unsigned&quot;</span>);</div>
+<div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a7b9ff0876f1e258bc122b3bfc5c3e90e">   51</a></span>&#160;    std::size_t <a class="code" href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a7b9ff0876f1e258bc122b3bfc5c3e90e">available</a> = 0;</div>
+<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a51c7f405d78ec61b8366c6496029184b">   53</a></span>&#160;    std::uint8_t <a class="code" href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a51c7f405d78ec61b8366c6496029184b">sequence</a> = 0;</div>
+<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a2cb3640dcd8d228e262903056f64245f">   55</a></span>&#160;    std::uint32_t <a class="code" href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a2cb3640dcd8d228e262903056f64245f">sequence_data</a>[2]{};</div>
+<div class="line"><a name="l00057"></a><span class="lineno"><a class="line" href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a53efa4b3b4116aebebf552ff3fb59003">   57</a></span>&#160;    Variable_integer_type <a class="code" href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a53efa4b3b4116aebebf552ff3fb59003">remaining_size</a> = 5;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160; </div>
+<div class="line"><a name="l00060"></a><span class="lineno"><a class="line" href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a330a6e01a30b4cc8bdde2d692602f365">   60</a></span>&#160;    <span class="keywordtype">void</span> <a class="code" href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a330a6e01a30b4cc8bdde2d692602f365">clear</a>() noexcept</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    {</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;        <span class="keyword">const</span> <span class="keyword">auto</span> tmp = <a class="code" href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a7b9ff0876f1e258bc122b3bfc5c3e90e">available</a>;</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;        *<span class="keyword">this</span>          = {};</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        <a class="code" href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a7b9ff0876f1e258bc122b3bfc5c3e90e">available</a>      = tmp;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    }</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;};</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160; </div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">typename</span> Element&gt;</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;constexpr std::size_t elements_max_size() noexcept</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;{</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">sizeof</span>(<span class="keyword">typename</span> std::decay&lt;Element&gt;::type);</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;}</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">typename</span> Element, <span class="keyword">typename</span>... Elements&gt;</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;constexpr <span class="keyword">typename</span> std::enable_if&lt;(<span class="keyword">sizeof</span>...(Elements) &gt; 0), std::size_t&gt;::type elements_max_size() noexcept</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;{</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keywordflow">return</span> elements_max_size&lt;Element&gt;() + elements_max_size&lt;Elements...&gt;();</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;}</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160; </div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    <span class="keywordflow">if</span> (left &gt; std::numeric_limits&lt;Left&gt;::max() - right) {</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    }</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    left += right;</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;}</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160; </div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;} <span class="comment">// namespace protocol</span></div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;} <span class="comment">// namespace terraqtt</span></div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160; </div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">typename</span> Left, <span class="keyword">typename</span> Right&gt;</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">bool</span> protected_add(Left&amp; left, Right right) noexcept</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;{</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    static_assert(std::is_unsigned&lt;Left&gt;::value &amp;&amp; std::is_unsigned&lt;Right&gt;::value, <span class="stringliteral">&quot;must be unsigned&quot;</span>);</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160; </div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    <span class="keywordflow">if</span> (left &gt; std::numeric_limits&lt;Left&gt;::max() - right) {</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    }</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    left += right;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;}</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160; </div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;} <span class="comment">// namespace protocol</span></div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;} <span class="comment">// namespace terraqtt</span></div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160; </div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="preprocessor">#endif</span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
+<div class="ttc" id="astructterraqtt_1_1protocol_1_1_read__context_html_a330a6e01a30b4cc8bdde2d692602f365"><div class="ttname"><a href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a330a6e01a30b4cc8bdde2d692602f365">terraqtt::protocol::Read_context::clear</a></div><div class="ttdeci">void clear() noexcept</div><div class="ttdoc">Resets the data except for the available field.</div><div class="ttdef"><b>Definition:</b> general.hpp:60</div></div>
 <div class="ttc" id="astructterraqtt_1_1protocol_1_1_read__context_html"><div class="ttname"><a href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html">terraqtt::protocol::Read_context</a></div><div class="ttdef"><b>Definition:</b> general.hpp:48</div></div>
+<div class="ttc" id="astructterraqtt_1_1protocol_1_1_read__context_html_a51c7f405d78ec61b8366c6496029184b"><div class="ttname"><a href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a51c7f405d78ec61b8366c6496029184b">terraqtt::protocol::Read_context::sequence</a></div><div class="ttdeci">std::uint8_t sequence</div><div class="ttdoc">The current sequence id.</div><div class="ttdef"><b>Definition:</b> general.hpp:53</div></div>
+<div class="ttc" id="astructterraqtt_1_1protocol_1_1_read__context_html_a2cb3640dcd8d228e262903056f64245f"><div class="ttname"><a href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a2cb3640dcd8d228e262903056f64245f">terraqtt::protocol::Read_context::sequence_data</a></div><div class="ttdeci">std::uint32_t sequence_data[2]</div><div class="ttdoc">Some sequence specific data.</div><div class="ttdef"><b>Definition:</b> general.hpp:55</div></div>
+<div class="ttc" id="astructterraqtt_1_1protocol_1_1_read__context_html_a53efa4b3b4116aebebf552ff3fb59003"><div class="ttname"><a href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a53efa4b3b4116aebebf552ff3fb59003">terraqtt::protocol::Read_context::remaining_size</a></div><div class="ttdeci">Variable_integer_type remaining_size</div><div class="ttdoc">The remaining size for the current packet.</div><div class="ttdef"><b>Definition:</b> general.hpp:57</div></div>
+<div class="ttc" id="astructterraqtt_1_1protocol_1_1_read__context_html_a7b9ff0876f1e258bc122b3bfc5c3e90e"><div class="ttname"><a href="../../db/daa/structterraqtt_1_1protocol_1_1_read__context.html#a7b9ff0876f1e258bc122b3bfc5c3e90e">terraqtt::protocol::Read_context::available</a></div><div class="ttdeci">std::size_t available</div><div class="ttdoc">How much data is available.</div><div class="ttdef"><b>Definition:</b> general.hpp:51</div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>

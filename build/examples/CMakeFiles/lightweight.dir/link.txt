@@ -1,0 +1,1 @@
+/bin/clang++-11  -g  -rdynamic CMakeFiles/lightweight.dir/lightweight.cpp.o  -o lightweight  /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0 /usr/local/lib/libspdlog.a -lpthread 

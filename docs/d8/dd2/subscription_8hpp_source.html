@@ -103,7 +103,7 @@ $(document).ready(function(){initNavTree('d8/dd2/subscription_8hpp_source.html',
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="keyword">namespace </span>protocol {</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keyword">enum class</span> Suback_return_code</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keyword">enum class</span> Suback_return_code : Byte</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;{</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    success0 = 0x00,</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    success1 = 0x01,</div>
@@ -213,11 +213,11 @@ $(document).ready(function(){initNavTree('d8/dd2/subscription_8hpp_source.html',
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    }</div>
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160; </div>
 <div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;    <span class="keywordflow">while</span> (context.remaining_size) {</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;        Byte rc;</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;        Suback_return_code rc;</div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;        <span class="keywordflow">if</span> (!read_element(input, ec, context, rc) || ec) {</div>
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;            <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;        }</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;        header.return_codes.push_back(<span class="keyword">static_cast&lt;</span>Suback_return_code<span class="keyword">&gt;</span>(rc));</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;        header.return_codes.push_back(rc);</div>
 <div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    }</div>
 <div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;}</div>

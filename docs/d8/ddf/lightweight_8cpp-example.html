@@ -86,10 +86,10 @@ $(document).ready(function(){initNavTree('d8/ddf/lightweight_8cpp-example.html',
 </div><!--header-->
 <div class="contents">
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;boost/asio.hpp&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;boost/asio/detail/socket_option.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;string&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;terraqtt/client.hpp&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;terraqtt/null_mutex.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;terraqtt/static_container.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;terraqtt/string_view.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;thread&gt;</span></div>
@@ -97,9 +97,8 @@ $(document).ready(function(){initNavTree('d8/ddf/lightweight_8cpp-example.html',
 <div class="line"><span class="keyword">using namespace </span>boost::asio;</div>
 <div class="line"><span class="keyword">using namespace </span>terraqtt;</div>
 <div class="line"> </div>
-<div class="line"><span class="keyword">using</span> Parent =</div>
-<div class="line">    <a name="_a0"></a><a class="code" href="../../d2/d41/classterraqtt_1_1_basic__client.html">Basic_client&lt;std::istream, std::ostream, Static_container&lt;64, char&gt;</a>,</div>
-<div class="line">                 <a name="_a1"></a><a class="code" href="../../dd/d37/classterraqtt_1_1_static__container.html">Static_container&lt;1, protocol::Suback_return_code&gt;</a>, <a name="_a2"></a><a class="code" href="../../da/d20/classterraqtt_1_1_null__mutex.html">Null_mutex</a>, std::chrono::steady_clock&gt;;</div>
+<div class="line"><span class="keyword">using</span> Parent = <a name="_a0"></a><a class="code" href="../../d2/d41/classterraqtt_1_1_basic__client.html">Basic_client&lt;std::istream, std::ostream, Static_container&lt;64, char&gt;</a>,</div>
+<div class="line">                            <a name="_a1"></a><a class="code" href="../../dd/d37/classterraqtt_1_1_static__container.html">Static_container&lt;1, protocol::Suback_return_code&gt;</a>, std::chrono::steady_clock&gt;;</div>
 <div class="line"> </div>
 <div class="line"><span class="keyword">class </span>Client : <span class="keyword">public</span> Parent</div>
 <div class="line">{</div>
@@ -107,10 +106,14 @@ $(document).ready(function(){initNavTree('d8/ddf/lightweight_8cpp-example.html',
 <div class="line">    <span class="keyword">using</span> Parent::Parent;</div>
 <div class="line"> </div>
 <div class="line"><span class="keyword">protected</span>:</div>
-<div class="line">    <span class="keywordtype">void</span> on_publish(std::error_code&amp; ec, <span class="keyword">const</span> <a name="_a3"></a><a class="code" href="../../db/d51/structterraqtt_1_1protocol_1_1_publish__header.html">protocol::Publish_header&lt;String_type&gt;</a>&amp; header,</div>
+<div class="line">    <span class="keywordtype">void</span> on_publish(std::error_code&amp; ec, <span class="keyword">const</span> <a name="_a2"></a><a class="code" href="../../db/d51/structterraqtt_1_1protocol_1_1_publish__header.html">protocol::Publish_header&lt;String_type&gt;</a>&amp; header,</div>
 <div class="line">                    std::istream&amp; payload, std::size_t payload_size)<span class="keyword"> override</span></div>
 <div class="line"><span class="keyword">    </span>{</div>
-<div class="line">        std::cout &lt;&lt; <span class="stringliteral">&quot;received (topic=&#39;&quot;</span> &lt;&lt; header.<a name="a4"></a>topic.begin() &lt;&lt; <span class="stringliteral">&quot;&#39;): &quot;</span> &lt;&lt; payload.rdbuf() &lt;&lt; std::endl;</div>
+<div class="line">        publish(ec, <a name="_a3"></a><a class="code" href="../../db/dd3/classterraqtt_1_1_string__view.html">String_view</a>{ <span class="stringliteral">&quot;log&quot;</span> }, <a class="code" href="../../db/dd3/classterraqtt_1_1_string__view.html">String_view</a>{ <span class="stringliteral">&quot;some message received&quot;</span> });</div>
+<div class="line"> </div>
+<div class="line">        std::cout &lt;&lt; <span class="stringliteral">&quot;received (topic=&#39;&quot;</span>;</div>
+<div class="line">        std::cout.write(header.<a name="a4"></a>topic.begin(), header.topic.size());</div>
+<div class="line">        std::cout &lt;&lt; <span class="stringliteral">&quot;&#39;): &quot;</span> &lt;&lt; payload.rdbuf() &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">        <span class="comment">// the protocol requires an acknoledgment for QoS=1</span></div>
 <div class="line">        <span class="keywordflow">if</span> (header.<a name="a5"></a>qos == QoS::at_least_once) {</div>
@@ -121,45 +124,58 @@ $(document).ready(function(){initNavTree('d8/ddf/lightweight_8cpp-example.html',
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">int</span> main()</div>
 <div class="line"><span class="keyword">try</span> {</div>
+<div class="line"><span class="preprocessor">#if TERRAQTT_LOG_ENABLE</span></div>
+<div class="line">    spdlog::set_level(spdlog::level::trace);</div>
+<div class="line"><span class="preprocessor">#endif</span></div>
+<div class="line"> </div>
 <div class="line">    ip::tcp::iostream stream;</div>
-<div class="line">    stream.connect(ip::tcp::endpoint{ ip::address::from_string(<span class="stringliteral">&quot;192.168.178.31&quot;</span>), 1883 });</div>
+<div class="line">    stream.connect(ip::tcp::endpoint{ ip::address::from_string(<span class="stringliteral">&quot;127.0.0.1&quot;</span>), 1883 });</div>
 <div class="line">    <span class="keywordflow">if</span> (!stream) {</div>
-<div class="line">        std::cerr &lt;&lt; <span class="stringliteral">&quot;failed to connect to broker\n&quot;</span>;</div>
+<div class="line">        std::cerr &lt;&lt; <span class="stringliteral">&quot;Failed to connect to broker\n&quot;</span>;</div>
 <div class="line">        <span class="keywordflow">return</span> 1;</div>
 <div class="line">    }</div>
 <div class="line"> </div>
 <div class="line">    Client client{ stream, stream };</div>
-<div class="line">    client.connect(<a name="_a8"></a><a class="code" href="../../db/dd3/classterraqtt_1_1_string__view.html">String_view</a>{ <span class="stringliteral">&quot;der.klient&quot;</span> }, <span class="keyword">false</span>, Seconds{ 30 });</div>
-<div class="line">    client.subscribe({ <a name="_a9"></a><a class="code" href="../../dc/d55/structterraqtt_1_1_subscribe__topic.html">Subscribe_topic&lt;String_view&gt;</a>{ <span class="stringliteral">&quot;test&quot;</span>, QoS::at_most_once } }, 1);</div>
+<div class="line">    client.connect(<a class="code" href="../../db/dd3/classterraqtt_1_1_string__view.html">String_view</a>{ <span class="stringliteral">&quot;my-client&quot;</span> }, <span class="keyword">true</span>, Seconds{ 5 });</div>
+<div class="line">    client.subscribe({ <a name="_a8"></a><a class="code" href="../../dc/d55/structterraqtt_1_1_subscribe__topic.html">Subscribe_topic&lt;String_view&gt;</a>{ <span class="stringliteral">&quot;test&quot;</span>, QoS::at_most_once } }, 1);</div>
+<div class="line">    client.subscribe({ <a class="code" href="../../dc/d55/structterraqtt_1_1_subscribe__topic.html">Subscribe_topic&lt;String_view&gt;</a>{ <span class="stringliteral">&quot;pc/led/version&quot;</span>, QoS::at_most_once } }, 2);</div>
+<div class="line">    client.subscribe({ <a class="code" href="../../dc/d55/structterraqtt_1_1_subscribe__topic.html">Subscribe_topic&lt;String_view&gt;</a>{ <span class="stringliteral">&quot;bed/led/version&quot;</span>, QoS::at_most_once } }, 3);</div>
+<div class="line">    client.subscribe({ <a class="code" href="../../dc/d55/structterraqtt_1_1_subscribe__topic.html">Subscribe_topic&lt;String_view&gt;</a>{ <span class="stringliteral">&quot;test/led/version&quot;</span>, QoS::at_most_once } }, 4);</div>
 <div class="line"> </div>
 <div class="line">    <span class="keywordflow">while</span> (stream) {</div>
-<div class="line">        std::error_code e;</div>
-<div class="line">        boost::system::error_code ec;</div>
+<div class="line">        std::error_code ec;</div>
 <div class="line"> </div>
-<div class="line">        <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> c = client.process_one(e, stream.rdbuf()-&gt;lowest_layer().available(ec))) {</div>
-<div class="line">            std::cout &lt;&lt; <span class="stringliteral">&quot;processed: &quot;</span> &lt;&lt; c &lt;&lt; <span class="stringliteral">&quot; bytes (&quot;</span> &lt;&lt; e &lt;&lt; <span class="stringliteral">&quot;)\n&quot;</span>;</div>
+<div class="line">        <span class="comment">// non-blocking approach</span></div>
+<div class="line">        <span class="keyword">const</span> std::size_t available = stream.socket().lowest_layer().available() + stream.rdbuf()-&gt;in_avail();</div>
+<div class="line">        <span class="keywordflow">if</span> (available &gt; 0) {</div>
+<div class="line">            client.process_one(ec, available);</div>
 <div class="line">        }</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// blocking approach</span></div>
+<div class="line">        <span class="comment">// client.process_one(ec);</span></div>
+<div class="line"> </div>
 <div class="line">        <span class="keywordflow">if</span> (ec) {</div>
-<div class="line">            std::cerr &lt;&lt; <span class="stringliteral">&quot;stream error: &quot;</span> &lt;&lt; ec &lt;&lt; std::endl;</div>
+<div class="line">            std::cerr &lt;&lt; <span class="stringliteral">&quot;Processing failed: &quot;</span> &lt;&lt; ec.message() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">            <span class="keywordflow">break</span>;</div>
 <div class="line">        }</div>
 <div class="line"> </div>
 <div class="line">        client.update_state();</div>
-<div class="line">        std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });</div>
+<div class="line">        stream.flush();</div>
+<div class="line">        std::this_thread::sleep_for(std::chrono::milliseconds{ 100 });</div>
 <div class="line">    }</div>
-<div class="line">    std::cerr &lt;&lt; <span class="stringliteral">&quot;stream broken\n&quot;</span>;</div>
+<div class="line">    std::cerr &lt;&lt; <span class="stringliteral">&quot;Stream broken\n&quot;</span>;</div>
 <div class="line">} <span class="keywordflow">catch</span> (<span class="keyword">const</span> std::system_error&amp; e) {</div>
-<div class="line">    std::cerr &lt;&lt; <span class="stringliteral">&quot;exception caught (&quot;</span> &lt;&lt; e.code() &lt;&lt; <span class="stringliteral">&quot;): &quot;</span> &lt;&lt; e.what() &lt;&lt; <span class="charliteral">&#39;\n&#39;</span>;</div>
+<div class="line">    <span class="comment">// std::cerr &lt;&lt; &quot;exception caught (&quot; &lt;&lt; e.code() &lt;&lt; &quot;): &quot; &lt;&lt; e.what() &lt;&lt; &#39;\n&#39;;</span></div>
+<div class="line">    TERRAQTT_LOG(CRITICAL, <span class="stringliteral">&quot;Exception from main ({}): {}&quot;</span>, e.code().value(), e.what());</div>
 <div class="line">    <span class="keywordflow">return</span> 1;</div>
 <div class="line">}</div>
 </div><!-- fragment --> </div><!-- contents -->
 </div><!-- doc-content -->
 <div class="ttc" id="aclassterraqtt_1_1_static__container_html"><div class="ttname"><a href="../../dd/d37/classterraqtt_1_1_static__container.html">terraqtt::Static_container</a></div><div class="ttdoc">Basic container that stores its element inside its own memory.</div><div class="ttdef"><b>Definition:</b> static_container.hpp:18</div></div>
 <div class="ttc" id="astructterraqtt_1_1protocol_1_1_puback__header_html"><div class="ttname"><a href="../../dc/d65/structterraqtt_1_1protocol_1_1_puback__header.html">terraqtt::protocol::Puback_header</a></div><div class="ttdef"><b>Definition:</b> publishing.hpp:21</div></div>
-<div class="ttc" id="aclassterraqtt_1_1_basic__client_html"><div class="ttname"><a href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a></div><div class="ttdoc">A basic MQTT client.</div><div class="ttdef"><b>Definition:</b> client.hpp:49</div></div>
+<div class="ttc" id="aclassterraqtt_1_1_basic__client_html"><div class="ttname"><a href="../../d2/d41/classterraqtt_1_1_basic__client.html">terraqtt::Basic_client</a></div><div class="ttdoc">A basic MQTT client.</div><div class="ttdef"><b>Definition:</b> client.hpp:46</div></div>
 <div class="ttc" id="astructterraqtt_1_1protocol_1_1_publish__header_html"><div class="ttname"><a href="../../db/d51/structterraqtt_1_1protocol_1_1_publish__header.html">terraqtt::protocol::Publish_header</a></div><div class="ttdef"><b>Definition:</b> publishing.hpp:12</div></div>
 <div class="ttc" id="aclassterraqtt_1_1_string__view_html"><div class="ttname"><a href="../../db/dd3/classterraqtt_1_1_string__view.html">terraqtt::String_view</a></div><div class="ttdoc">A simple string container holding a single const char* and its length.</div><div class="ttdef"><b>Definition:</b> string_view.hpp:10</div></div>
-<div class="ttc" id="aclassterraqtt_1_1_null__mutex_html"><div class="ttname"><a href="../../da/d20/classterraqtt_1_1_null__mutex.html">terraqtt::Null_mutex</a></div><div class="ttdoc">No operation mutex without any logic. Useful when the client runs in a single thread environment.</div><div class="ttdef"><b>Definition:</b> null_mutex.hpp:7</div></div>
 <div class="ttc" id="astructterraqtt_1_1_subscribe__topic_html"><div class="ttname"><a href="../../dc/d55/structterraqtt_1_1_subscribe__topic.html">terraqtt::Subscribe_topic</a></div><div class="ttdef"><b>Definition:</b> subscription.hpp:11</div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
