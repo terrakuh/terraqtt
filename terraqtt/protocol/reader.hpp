@@ -76,7 +76,13 @@ inline bool read_element(Input& input, std::error_code& ec, Read_context& contex
 template<typename Input>
 inline bool read_element(Input& input, std::error_code& ec, Read_context& context, Variable_integer& out)
 {
-	for (; context.sequence_data[1] < 4; ++context.sequence_data[1]) {
+	// set the multiplier
+	if (!context.sequence_data[1]) {
+		context.sequence_data[1] = 1;
+	}
+	int c = 0;
+
+	do {
 		if (!context.available) {
 			return false;
 		} else if (!context.remaining_size) {
@@ -84,7 +90,7 @@ inline bool read_element(Input& input, std::error_code& ec, Read_context& contex
 			return false;
 		}
 
-		const auto c = input.get();
+		c = input.get();
 		if (!input) {
 			ec = std::make_error_code(std::errc::io_error);
 			return false;
@@ -92,11 +98,14 @@ inline bool read_element(Input& input, std::error_code& ec, Read_context& contex
 
 		--context.available;
 		--context.remaining_size;
-		context.sequence_data[0] = context.sequence_data[0] << 7 | (c & 0x7f);
-		if (!(c & 0x80)) {
-			break;
+		context.sequence_data[0] += (c & 0x7f) * context.sequence_data[1];
+		context.sequence_data[1] *= 128;
+
+		if (context.sequence_data[1] > 128 * 128 * 128 && c & 0x80) {
+			ec = Error::bad_remaining_size;
+			return false;
 		}
-	}
+	} while (c & 0x80);
 
 	out                      = static_cast<Variable_integer>(context.sequence_data[0]);
 	context.sequence_data[0] = 0;

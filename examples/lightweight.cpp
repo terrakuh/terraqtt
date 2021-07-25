@@ -30,7 +30,8 @@ protected:
 
 		std::cout << "received (topic='";
 		std::cout.write(header.topic.begin(), header.topic.size());
-		std::cout << "'): " << payload.rdbuf() << std::endl;
+		std::cout << "'; " << payload_size << " bytes): ";
+		std::cout << payload.rdbuf() << std::endl;
 
 		// the protocol requires an acknoledgment for QoS=1
 		if (header.qos == QoS::at_least_once) {
@@ -46,7 +47,7 @@ try {
 #endif
 
 	ip::tcp::iostream stream;
-	stream.connect(ip::tcp::endpoint{ ip::address::from_string("127.0.0.1"), 1883 });
+	stream.connect(ip::tcp::endpoint{ ip::address::from_string("192.168.178.31"), 1883 });
 	if (!stream) {
 		std::cerr << "Failed to connect to broker\n";
 		return 1;
@@ -57,7 +58,7 @@ try {
 	client.subscribe({ Subscribe_topic<String_view>{ "test", QoS::at_most_once } }, 1);
 	client.subscribe({ Subscribe_topic<String_view>{ "pc/led/version", QoS::at_most_once } }, 2);
 	client.subscribe({ Subscribe_topic<String_view>{ "bed/led/version", QoS::at_most_once } }, 3);
-	client.subscribe({ Subscribe_topic<String_view>{ "test/led/version", QoS::at_most_once } }, 4);
+	client.subscribe({ Subscribe_topic<String_view>{ "led/firmware/hmac", QoS::at_most_once } }, 4);
 
 	while (stream) {
 		std::error_code ec;

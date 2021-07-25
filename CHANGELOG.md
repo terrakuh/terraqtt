@@ -10,6 +10,7 @@
 - Ignoring of unprocessed data
 - No keep alive timeout
 - Non-blocking example
+- Wrong en- and decoding of variable integers
 
 ## [v0.3.0] - 2020-12-29
 ### Changed

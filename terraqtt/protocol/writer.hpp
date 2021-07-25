@@ -50,28 +50,21 @@ inline Byte* write_elements(Byte* output, std::error_code& ec, std::uint16_t val
  */
 inline Byte* write_elements(Byte* output, std::error_code& ec, Variable_integer value) noexcept
 {
-	const auto v = static_cast<typename std::underlying_type<Variable_integer>::type>(value);
-	if (v < 128) {
-		*output = static_cast<Byte>(v);
-		return output + 1;
-	} else if (v < 16384) {
-		output[0] = static_cast<Byte>(v >> 7 | 0x80);
-		output[1] = static_cast<Byte>(v & 0x7f);
-		return output + 2;
-	} else if (v < 2097152) {
-		output[0] = static_cast<Byte>((v >> 14 & 0x7f) | 0x80);
-		output[1] = static_cast<Byte>((v >> 7 & 0x7f) | 0x80);
-		output[2] = static_cast<Byte>(v & 0x7f);
-		return output + 3;
-	} else if (v < 268435456) {
-		output[0] = static_cast<Byte>((v >> 21 & 0x7f) | 0x80);
-		output[1] = static_cast<Byte>((v >> 14 & 0x7f) | 0x80);
-		output[2] = static_cast<Byte>((v >> 7 & 0x7f) | 0x80);
-		output[3] = static_cast<Byte>(v & 0x7f);
-		return output + 4;
-	}
-	ec = Error::variable_integer_too_large;
-	return output;
+	auto v = static_cast<typename std::underlying_type<Variable_integer>::type>(value);
+	int i  = 0;
+	do {
+		if (i >= 4) {
+			ec = Error::variable_integer_too_large;
+			return output;
+		}
+		auto c = v % 128;
+		v /= 128;
+		if (v > 0) {
+			c |= 0x80;
+		}
+		output[i++] = static_cast<Byte>(c);
+	} while (v > 0);
+	return output + i;
 }
 
 template<typename Element, typename... Elements>
