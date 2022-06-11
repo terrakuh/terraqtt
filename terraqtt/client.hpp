@@ -43,8 +43,7 @@ namespace terraqtt {
  * [Clock](https://en.cppreference.com/w/cpp/named_req/Clock) requirements.
  */
 template<typename Input, typename Output, typename String, typename Return_code_container, typename Clock>
-class Basic_client
-{
+class Basic_client {
 public:
 	typedef String String_type;
 	typedef Return_code_container Return_code_container_type;
@@ -55,8 +54,7 @@ public:
 	 * @param[in] input The input stream.
 	 * @param[in] output The output stream.
 	 */
-	Basic_client(Input& input, Output& output) noexcept : _input{ &input }, _output{ &output }
-	{}
+	Basic_client(Input& input, Output& output) noexcept : _input{ &input }, _output{ &output } {}
 	/// Destructor. Automatically disconnects from the server without waiting for the response.
 	virtual ~Basic_client() noexcept
 	{
@@ -296,21 +294,14 @@ public:
 		TERRAQTT_LOG(TRACE, "Processed {} bytes", processed);
 		return processed;
 	}
-	Input* input() noexcept
-	{
-		return _input;
-	}
-	Output* output() noexcept
-	{
-		return _output;
-	}
+	Input* input() noexcept { return _input; }
+	Output* output() noexcept { return _output; }
 
 protected:
 	/// This keeps track of the keep alive timeout. The timeout is reset after the client sends a packet.
 	Keep_aliver<Clock> keep_alive;
 
-	virtual void on_connack(std::error_code& ec, const protocol::Connack_header& header)
-	{}
+	virtual void on_connack(std::error_code& ec, const protocol::Connack_header& header) {}
 	/**
 	 * Called when the broker published something to a subscribed topic. Quality of serivce is not handled.
 	 *
@@ -323,21 +314,15 @@ protected:
 	virtual void on_publish(std::error_code& ec, const protocol::Publish_header<String_type>& header,
 	                        std::istream& payload, std::size_t payload_size)
 	{}
-	virtual void on_puback(std::error_code& ec, const protocol::Puback_header& header)
-	{}
-	virtual void on_pubrec(std::error_code& ec, const protocol::Pubrec_header& header)
-	{}
-	virtual void on_pubrel(std::error_code& ec, const protocol::pubrel_header& header)
-	{}
-	virtual void on_pubcomp(std::error_code& ec, const protocol::Pubcomp_header& header)
-	{}
+	virtual void on_puback(std::error_code& ec, const protocol::Puback_header& header) {}
+	virtual void on_pubrec(std::error_code& ec, const protocol::Pubrec_header& header) {}
+	virtual void on_pubrel(std::error_code& ec, const protocol::pubrel_header& header) {}
+	virtual void on_pubcomp(std::error_code& ec, const protocol::Pubcomp_header& header) {}
 	virtual void on_suback(std::error_code& ec,
 	                       const protocol::Suback_header<Return_code_container_type>& header)
 	{}
-	virtual void on_unsuback(std::error_code& ec, const protocol::Unsuback_header& header)
-	{}
-	virtual void on_pingresp(std::error_code& ec, const protocol::Pingresp_header& header)
-	{}
+	virtual void on_unsuback(std::error_code& ec, const protocol::Unsuback_header& header) {}
+	virtual void on_pingresp(std::error_code& ec, const protocol::Pingresp_header& header) {}
 
 private:
 	/// How many bytes should be ignored for the next read call.
@@ -350,7 +335,7 @@ private:
 	        protocol::Pubrec_header, protocol::pubrel_header, protocol::Pubcomp_header,
 	        protocol::Suback_header<Return_code_container>, protocol::Unsuback_header,
 	        protocol::Pingresp_header>
-	    _read_header;
+	  _read_header;
 	Input* _input;
 	Output* _output;
 
@@ -503,8 +488,8 @@ private:
 			_clear_read();
 			auto& header = *_read_header.template get<index>(ec);
 			if (!ec) {
-				TERRAQTT_LOG(DEBUG, "SUBACK: Received {} return codes for packet={}",
-				             header.return_codes.size(), header.packet_identifier);
+				TERRAQTT_LOG(DEBUG, "SUBACK: Received {} return codes for packet={}", header.return_codes.size(),
+				             header.packet_identifier);
 				on_suback(ec, header);
 			}
 		}

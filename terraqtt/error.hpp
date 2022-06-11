@@ -5,8 +5,7 @@
 
 namespace terraqtt {
 
-enum class Error
-{
+enum class Error {
 	variable_integer_too_large = 1,
 	payload_too_large,
 	string_too_long,
@@ -40,13 +39,9 @@ enum class Error
 
 inline const std::error_category& terraqtt_category() noexcept
 {
-	static class : public std::error_category
-	{
+	static class : public std::error_category {
 	public:
-		const char* name() const noexcept override
-		{
-			return "terraqtt";
-		}
+		const char* name() const noexcept override { return "terraqtt"; }
 		std::string message(int e) const override
 		{
 			switch (static_cast<Error>(e)) {
@@ -70,7 +65,6 @@ inline std::error_code make_error_code(Error e) noexcept
 namespace std {
 
 template<>
-struct is_error_code_enum<terraqtt::Error> : true_type
-{};
+struct is_error_code_enum<terraqtt::Error> : true_type {};
 
 } // namespace std

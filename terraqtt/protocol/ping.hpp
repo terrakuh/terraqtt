@@ -8,11 +8,9 @@
 namespace terraqtt {
 namespace protocol {
 
-struct Pingreq_header
-{};
+struct Pingreq_header {};
 
-struct Pingresp_header
-{};
+struct Pingresp_header {};
 
 template<typename Output>
 inline void write_packet(Output& output, std::error_code& ec, const Pingreq_header& header)

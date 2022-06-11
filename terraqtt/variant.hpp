@@ -36,12 +36,10 @@ constexpr typename std::enable_if<(sizeof...(Other) > 0), std::size_t>::type max
 }
 
 template<std::size_t Index, typename Type, typename... Types>
-struct Select_type : Select_type<Index - 1, Types...>
-{};
+struct Select_type : Select_type<Index - 1, Types...> {};
 
 template<typename Type, typename... Types>
-struct Select_type<0, Type, Types...>
-{
+struct Select_type<0, Type, Types...> {
 	typedef Type type;
 };
 
@@ -54,16 +52,12 @@ struct Select_type<0, Type, Types...>
  * @tparam Types All allowed types of the variant.
  */
 template<typename... Types>
-class Variant
-{
+class Variant {
 public:
 	constexpr static std::size_t npos = std::numeric_limits<std::size_t>::max();
 
 	/// Destructor. Calls the destructor of the containing object if there is any.
-	~Variant() noexcept
-	{
-		clear();
-	}
+	~Variant() noexcept { clear(); }
 	/// Calls the destructor of the containing object or does nothing if this variant is empty.
 	void clear() noexcept
 	{
@@ -106,18 +100,12 @@ public:
 		return reinterpret_cast<typename detail::Select_type<Index, Types...>::type*>(&_data);
 	}
 	/// Returns the currently type index or `npos` if this variant is empty.
-	std::size_t index() const noexcept
-	{
-		return _index;
-	}
-	bool empty() const noexcept
-	{
-		return _index >= npos;
-	}
+	std::size_t index() const noexcept { return _index; }
+	bool empty() const noexcept { return _index >= npos; }
 
 private:
 	typename std::aligned_storage<detail::max_size_of<Types...>(), detail::max_align_of<Types...>()>::type
-	    _data;
+	  _data;
 	std::size_t _index = npos;
 
 	template<std::size_t Index>

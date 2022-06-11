@@ -9,8 +9,7 @@ namespace terraqtt {
 namespace protocol {
 
 template<typename String>
-struct Publish_header
-{
+struct Publish_header {
 	String topic;
 	bool duplicate;
 	bool retain;
@@ -18,23 +17,19 @@ struct Publish_header
 	std::uint16_t packet_identifier;
 };
 
-struct Puback_header
-{
+struct Puback_header {
 	std::uint16_t packet_identifier;
 };
 
-struct Pubrec_header
-{
+struct Pubrec_header {
 	std::uint16_t packet_identifier;
 };
 
-struct pubrel_header
-{
+struct pubrel_header {
 	std::uint16_t packet_identifier;
 };
 
-struct Pubcomp_header
-{
+struct Pubcomp_header {
 	std::uint16_t packet_identifier;
 };
 
@@ -43,7 +38,7 @@ inline void write_packet(Output& output, std::error_code& ec, const Publish_head
                          const Payload& payload)
 {
 	typename std::underlying_type<Variable_integer>::type remaining =
-	    2 + (header.qos != QoS::at_most_once ? 2 : 0);
+	  2 + (header.qos != QoS::at_most_once ? 2 : 0);
 
 	if (!protected_add(remaining, header.topic.size()) || !protected_add(remaining, payload.size())) {
 		ec = Error::payload_too_large;
@@ -51,10 +46,10 @@ inline void write_packet(Output& output, std::error_code& ec, const Publish_head
 	}
 
 	write_elements(
-	    output, ec,
-	    static_cast<Byte>(static_cast<int>(Control_packet_type::publish) << 4 |
-	                      (header.duplicate << 3 | static_cast<int>(header.qos) << 1 | header.retain)),
-	    static_cast<Variable_integer>(remaining));
+	  output, ec,
+	  static_cast<Byte>(static_cast<int>(Control_packet_type::publish) << 4 |
+	                    (header.duplicate << 3 | static_cast<int>(header.qos) << 1 | header.retain)),
+	  static_cast<Variable_integer>(remaining));
 
 	if (ec || (write_blob<true>(output, ec, header.topic), ec)) {
 		return;

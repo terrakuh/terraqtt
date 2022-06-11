@@ -16,8 +16,7 @@ typedef std::chrono::duration<std::uint16_t> Seconds;
  * @tparam Clock A clock type that statisfies the Clock requirements.
  */
 template<typename Clock>
-class Keep_aliver
-{
+class Keep_aliver {
 public:
 	/**
 	 * Constructor.
@@ -36,20 +35,11 @@ public:
 		_ping_timeout = typename Clock::time_point{};
 	}
 	/// Marks the ping as completed.
-	void complete()
-	{
-		_ping_timeout = typename Clock::time_point{};
-	}
+	void complete() { _ping_timeout = typename Clock::time_point{}; }
 	/// Starts the timeout for the required ping response from the broker.
-	void start_ping_timeout()
-	{
-		_ping_timeout = Clock::now() + std::chrono::seconds{ 15 };
-	}
+	void start_ping_timeout() { _ping_timeout = Clock::now() + std::chrono::seconds{ 15 }; }
 	/// Checks whether a ping operation is required to keep the connection alive.
-	bool needs_ping() const noexcept
-	{
-		return _timeout != Seconds{ 0 } && Clock::now() >= _next_ping;
-	}
+	bool needs_ping() const noexcept { return _timeout != Seconds{ 0 } && Clock::now() >= _next_ping; }
 	/// Checks whether the timeout has expired.
 	bool timed_out() const noexcept
 	{

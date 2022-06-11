@@ -10,24 +10,16 @@
 
 namespace terraqtt {
 
-enum class QoS
-{
-	at_most_once,
-	at_least_once,
-	exactly_once
-};
+enum class QoS { at_most_once, at_least_once, exactly_once };
 
 namespace protocol {
 
 typedef std::uint8_t Byte;
 typedef std::uint32_t Variable_integer_type;
 
-enum class Variable_integer : Variable_integer_type
-{
-};
+enum class Variable_integer : Variable_integer_type {};
 
-enum class Control_packet_type
-{
+enum class Control_packet_type {
 	reserved,
 	connect,
 	connack,
@@ -45,8 +37,7 @@ enum class Control_packet_type
 	disconnect,
 };
 
-struct Read_context
-{
+struct Read_context {
 	/// How much data is available.
 	std::size_t available = 0;
 	/// The current sequence id.

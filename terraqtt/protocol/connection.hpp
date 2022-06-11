@@ -12,8 +12,7 @@
 namespace terraqtt {
 namespace protocol {
 
-enum class Connack_return_code
-{
+enum class Connack_return_code {
 	accepted,
 	unacceptable_version,
 	identifier_rejected,
@@ -23,8 +22,7 @@ enum class Connack_return_code
 };
 
 template<typename String, typename Will_message, typename Password>
-struct Connect_header
-{
+struct Connect_header {
 	String client_identifier;
 	std::pair<String, Will_message>* will;
 	typename std::remove_reference<String>::type* username;
@@ -36,14 +34,12 @@ struct Connect_header
 	std::uint16_t keep_alive;
 };
 
-struct Connack_header
-{
+struct Connack_header {
 	bool session_present;
 	Connack_return_code return_code;
 };
 
-struct Disconnect_header
-{};
+struct Disconnect_header {};
 
 template<typename Output, typename String, typename Will_message, typename Password>
 inline void write_packet(Output& output, std::error_code& ec,
@@ -62,11 +58,11 @@ inline void write_packet(Output& output, std::error_code& ec,
 
 	// fixed header & protocol name & level & connect flags
 	typename std::underlying_type<Variable_integer>::type remaining =
-	    12 + (header.will ? 4 : 0) + (header.username ? 2 : 0) + (header.password ? 2 : 0);
+	  12 + (header.will ? 4 : 0) + (header.username ? 2 : 0) + (header.password ? 2 : 0);
 	const auto protocol_level = Byte{ 0x04 };
 	const auto connect_flags  = static_cast<Byte>(
-        (header.username ? 0x80 : 0x00) | (header.password ? 0x40 : 0x00) | (header.will_retain << 5) |
-        (static_cast<int>(header.will_qos) << 3) | (header.will ? 0x04 : 0x00) | (header.clean_session << 1));
+    (header.username ? 0x80 : 0x00) | (header.password ? 0x40 : 0x00) | (header.will_retain << 5) |
+    (static_cast<int>(header.will_qos) << 3) | (header.will ? 0x04 : 0x00) | (header.clean_session << 1));
 
 	if (!protected_add(remaining, header.client_identifier.size()) ||
 	    (header.will && !protected_add(remaining, header.will->first.size())) ||

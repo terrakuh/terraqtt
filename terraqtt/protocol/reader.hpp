@@ -22,7 +22,7 @@ inline Control_packet_type peek_type(Input& input, std::error_code& ec, Read_con
 
 template<typename Input, typename Type>
 inline typename std::enable_if<(std::is_trivial<Type>::value && sizeof(Type) == 1), bool>::type
-    read_element(Input& input, std::error_code& ec, Read_context& context, Type& out)
+  read_element(Input& input, std::error_code& ec, Read_context& context, Type& out)
 {
 	if (!context.available) {
 		return false;

@@ -8,28 +8,20 @@
 namespace terraqtt {
 
 template<typename String>
-struct Subscribe_topic
-{
+struct Subscribe_topic {
 	String filter;
 	QoS qos;
 };
 
 namespace protocol {
 
-enum class Suback_return_code : Byte
-{
-	success0 = 0x00,
-	success1 = 0x01,
-	success2 = 0x02,
-	failure  = 0x80
-};
+enum class Suback_return_code : Byte { success0 = 0x00, success1 = 0x01, success2 = 0x02, failure = 0x80 };
 
 /**
  * @tparam TopicContainer must hold the type subscribe_topic
  */
 template<typename Topic_container>
-struct Subscribe_header
-{
+struct Subscribe_header {
 	Topic_container topics;
 	std::uint16_t packet_identifier;
 };
@@ -38,8 +30,7 @@ struct Subscribe_header
  * @tparam ReturnCodeContainer must hold the type suback_return_code
  */
 template<typename Return_code_container>
-struct Suback_header
-{
+struct Suback_header {
 	static_assert(std::is_same<typename Return_code_container::value_type, Suback_return_code>::value,
 	              "Return_code_container must return return_code");
 
@@ -51,14 +42,12 @@ struct Suback_header
  * @tparam TopicContainer must hold Strings
  */
 template<typename Topic_container>
-struct Unsubscribe_header
-{
+struct Unsubscribe_header {
 	Topic_container topics;
 	std::uint16_t packet_identifier;
 };
 
-struct Unsuback_header
-{
+struct Unsuback_header {
 	std::uint16_t packet_identifier;
 };
 
@@ -81,8 +70,7 @@ inline void write_packet(Output& output, std::error_code& ec, const Subscribe_he
 		}
 	}
 
-	write_elements(output, ec,
-	               static_cast<Byte>(static_cast<int>(Control_packet_type::subscribe) << 4 | 0x02),
+	write_elements(output, ec, static_cast<Byte>(static_cast<int>(Control_packet_type::subscribe) << 4 | 0x02),
 	               static_cast<Variable_integer>(remaining), header.packet_identifier);
 	if (ec) {
 		return;

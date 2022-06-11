@@ -7,8 +7,7 @@
 namespace terraqtt {
 
 /// A simple string container holding a single `const char*` and its length.
-class String_view
-{
+class String_view {
 public:
 	typedef char value_type;
 
@@ -46,18 +45,15 @@ public:
 		_string = string;
 		_length = length;
 	}
-	const char* begin() const noexcept
+	String_view(const char* first, const char* last) noexcept
 	{
-		return _string;
+		_string = first;
+		_length = last - first;
 	}
-	const char* end() const noexcept
-	{
-		return _string + _length;
-	}
-	std::size_t size() const noexcept
-	{
-		return _length;
-	}
+	const char* begin() const noexcept { return _string; }
+	const char* end() const noexcept { return _string + _length; }
+	std::size_t size() const noexcept { return _length; }
+	String_view substr(std::size_t offset) const noexcept { return { _string + offset, end() }; }
 
 private:
 	const char* _string;

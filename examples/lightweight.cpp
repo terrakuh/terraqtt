@@ -17,8 +17,7 @@ using namespace terraqtt;
 using Parent = Basic_client<std::istream, std::ostream, Static_container<64, char>,
                             Static_container<1, protocol::Suback_return_code>, std::chrono::steady_clock>;
 
-class Client : public Parent
-{
+class Client : public Parent {
 public:
 	using Parent::Parent;
 

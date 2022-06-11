@@ -12,8 +12,7 @@ namespace detail {
  *
  * @private
  */
-class Constrained_streambuf : public std::streambuf
-{
+class Constrained_streambuf : public std::streambuf {
 public:
 	/**
 	 * Constructor.
@@ -26,14 +25,11 @@ public:
 		_remaining = remaining;
 	}
 	/// How many bytes can be read.
-	std::size_t remaining() const noexcept
-	{
-		return _remaining;
-	}
+	std::size_t remaining() const noexcept { return _remaining; }
 	std::size_t release()
 	{
 		const std::size_t remaining = _remaining - static_cast<std::size_t>(egptr() - gptr());
-		_remaining = 0;
+		_remaining                  = 0;
 		setg(nullptr, nullptr, nullptr);
 		return remaining;
 	}
