@@ -1,88 +1,87 @@
-#include <boost/asio.hpp>
-#include <boost/asio/detail/socket_option.hpp>
+#include <asio.hpp>
+#include <fstream>
 #include <iostream>
-#include <string>
-#include <terraqtt/client.hpp>
-#include <terraqtt/static_container.hpp>
-#include <terraqtt/string_view.hpp>
-#include <thread>
+#include <terraqtt/protocol/v5/connect.hpp>
+#include <terraqtt/protocol/v5/connect_acknowledge.hpp>
+#include <terraqtt/protocol/v5/ping.hpp>
 
-using namespace boost::asio;
-using namespace terraqtt;
+using namespace asio;
 
-/**
- * Uses the basic input and output streams from the standard library. The string is a static container which
- * allows at most 64 characters (including zero terminating).
- */
-using Parent = Basic_client<std::istream, std::ostream, Static_container<64, char>,
-                            Static_container<1, protocol::Suback_return_code>, std::chrono::steady_clock>;
+struct AsyncContext {
+	template<typename Type>
+	using return_type = awaitable<std::pair<std::error_code, Type>>;
 
-class Client : public Parent {
-public:
-	using Parent::Parent;
+	ip::tcp::socket& socket;
+	std::ofstream rf{ "/home/yunus/Projects/terraqtt/read.bin", std::ios::binary | std::ios::out };
+	std::ofstream wf{ "/home/yunus/Projects/terraqtt/write.bin", std::ios::binary | std::ios::out };
 
-protected:
-	void on_publish(std::error_code& ec, const protocol::Publish_header<String_type>& header,
-	                std::istream& payload, std::size_t payload_size) override
+	awaitable<std::pair<std::error_code, std::size_t>> read(std::span<std::byte> buffer)
 	{
-		publish(ec, String_view{ "log" }, String_view{ "some message received" });
-
-		std::cout << "received (topic='";
-		std::cout.write(header.topic.begin(), header.topic.size());
-		std::cout << "'; " << payload_size << " bytes): ";
-		std::cout << payload.rdbuf() << std::endl;
-
-		// the protocol requires an acknoledgment for QoS=1
-		if (header.qos == QoS::at_least_once) {
-			protocol::write_packet(*output(), ec, protocol::Puback_header{ header.packet_identifier });
-		}
+		const auto [ec, read] = co_await async_read(socket, asio::buffer(buffer), as_tuple(use_awaitable));
+		rf.write(reinterpret_cast<const char*>(buffer.data()), read);
+		rf.flush();
+		std::cout << "ec read: " << ec.message() << " of " << read << " bytes\n";
+		co_return std::make_pair(ec, read);
+	}
+	awaitable<std::pair<std::error_code, std::size_t>> read_some(std::span<std::byte> buffer)
+	{
+		const auto [ec, read] = co_await socket.async_read_some(asio::buffer(buffer), as_tuple(use_awaitable));
+		rf.write(reinterpret_cast<const char*>(buffer.data()), read);
+		rf.flush();
+		std::cout << "ec read some: " << ec.message() << " of " << read << " bytes\n";
+		co_return std::make_pair(ec, read);
+	}
+	awaitable<std::pair<std::error_code, std::size_t>> write(std::span<const std::byte> buffer)
+	{
+		const auto [ec, written] = co_await async_write(socket, asio::buffer(buffer), as_tuple(use_awaitable));
+		wf.write(reinterpret_cast<const char*>(buffer.data()), written);
+		wf.flush();
+		std::cout << "ec write: " << ec.message() << " of " << written << " bytes\n";
+		co_return std::make_pair(ec, written);
+	}
+	template<typename Type>
+	auto return_value(std::error_code ec, Type&& value)
+	{
+		return std::make_pair(ec, std::forward<Type>(value));
+	}
+	template<typename Type>
+	auto return_value(std::error_code ec)
+	{
+		return std::make_pair(ec, Type{});
 	}
 };
 
+awaitable<void> asio_main(ip::tcp::endpoint endpoint)
+{
+	const auto executor = co_await this_coro::executor;
+
+	ip::tcp::socket socket{ executor };
+	co_await socket.async_connect(endpoint, use_awaitable);
+	std::cout << "Connected!\n";
+
+	AsyncContext context{ socket };
+
+	terraqtt::protocol::v5::ConnectHeader<std::string_view> header{
+		/* .receive_maximum = 1, .maximum_packet_size = 1024 */ .client_identifier = "terraqtt"
+	};
+	co_await terraqtt::protocol::v5::write(context, header);
+	std::cout << "Connect written\n";
+
+	terraqtt::protocol::v5::ConnectAcknowledgeHeader<std::string> ack{};
+	terraqtt::protocol::io::Reader<5, false, AsyncContext> reader{ context };
+	co_await reader.read_fixed_header();
+	co_await terraqtt::protocol::v5::read(reader, ack);
+
+	std::cout << "Done: " << static_cast<int>(ack.reason_code) << "\n";
+	std::cout << "Topic alias: " << ack.topic_alias_maximum << "\n";
+
+	co_return;
+}
+
 int main()
-try {
-#if TERRAQTT_LOG_ENABLE
-	spdlog::set_level(spdlog::level::trace);
-#endif
-
-	ip::tcp::iostream stream;
-	stream.connect(ip::tcp::endpoint{ ip::address::from_string("192.168.178.31"), 1883 });
-	if (!stream) {
-		std::cerr << "Failed to connect to broker\n";
-		return 1;
-	}
-
-	Client client{ stream, stream };
-	client.connect(String_view{ "my-client" }, true, Seconds{ 5 });
-	client.subscribe({ Subscribe_topic<String_view>{ "test", QoS::at_most_once } }, 1);
-	client.subscribe({ Subscribe_topic<String_view>{ "pc/led/version", QoS::at_most_once } }, 2);
-	client.subscribe({ Subscribe_topic<String_view>{ "bed/led/version", QoS::at_most_once } }, 3);
-	client.subscribe({ Subscribe_topic<String_view>{ "led/firmware/hmac", QoS::at_most_once } }, 4);
-
-	while (stream) {
-		std::error_code ec;
-
-		// non-blocking approach
-		const std::size_t available = stream.socket().lowest_layer().available() + stream.rdbuf()->in_avail();
-		if (available > 0) {
-			client.process_one(ec, available);
-		}
-
-		// blocking approach
-		// client.process_one(ec);
-
-		if (ec) {
-			std::cerr << "Processing failed: " << ec.message() << "\n";
-			break;
-		}
-
-		client.update_state();
-		stream.flush();
-		std::this_thread::sleep_for(std::chrono::milliseconds{ 100 });
-	}
-	std::cerr << "Stream broken\n";
-} catch (const std::system_error& e) {
-	// std::cerr << "exception caught (" << e.code() << "): " << e.what() << '\n';
-	TERRAQTT_LOG(CRITICAL, "Exception from main ({}): {}", e.code().value(), e.what());
-	return 1;
+{
+	io_service service{};
+	co_spawn(service, asio_main(ip::tcp::endpoint{ ip::address::from_string("192.168.178.31"), 1883 }),
+	         detached);
+	service.run();
 }

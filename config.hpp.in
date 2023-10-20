@@ -6,4 +6,6 @@
 #cmakedefine TERRAQTT_LOG_LEVEL @TERRAQTT_LOG_LEVEL@
 // clang-format on
 
+#define TERRAQTT_BUFFER_SIZE 256
+
 #endif

@@ -1,5 +1,6 @@
-#ifndef TERRAQTT_STATIC_CONTAINER_HPP_
-#define TERRAQTT_STATIC_CONTAINER_HPP_
+#pragma once
+
+#include "concepts.hpp"
 
 #include <cstddef>
 #include <type_traits>
@@ -15,7 +16,7 @@ namespace terraqtt {
  * @tparam Type the element type
  */
 template<std::size_t Size, typename Type>
-class Static_container {
+class StaticContainer {
 public:
 	typedef Type value_type;
 
@@ -48,6 +49,6 @@ private:
 	std::size_t _size = 0;
 };
 
-} // namespace terraqtt
+static_assert(WriteableContainer<StaticContainer<10, std::byte>>, "Implementation error.");
 
-#endif
+} // namespace terraqtt

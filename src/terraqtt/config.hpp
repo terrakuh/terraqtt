@@ -6,4 +6,6 @@
 #define TERRAQTT_LOG_LEVEL INFO
 // clang-format on
 
+#define TERRAQTT_BUFFER_SIZE 256
+
 #endif
